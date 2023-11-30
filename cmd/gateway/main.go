@@ -8,6 +8,7 @@ import (
 	"github.com/bugsnag/bugsnag-go/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/urfave/cli/v2"
+	"github.com/zikwall/app_metrica/internal/services/gateway"
 
 	"github.com/zikwall/app_metrica/config"
 	"github.com/zikwall/app_metrica/internal/appmetrica"
@@ -16,11 +17,8 @@ import (
 	"github.com/zikwall/app_metrica/pkg/signal"
 )
 
-const title = "Unrealistically, extremely fast backend for all services"
-
 func main() {
 	application := cli.App{
-		Name: title,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:     "config-file",
@@ -68,7 +66,7 @@ func Main(ctx *cli.Context) error {
 	appContext, cancel := context.WithCancel(ctx.Context)
 	defer func() {
 		cancel()
-		log.Info("app context is canceled, Luntik is down!")
+		log.Info("app context is canceled, AppMetrica is down!")
 	}()
 
 	cfg, err := config.New(ctx.String("config-file"))
@@ -78,6 +76,7 @@ func Main(ctx *cli.Context) error {
 
 	metrica, err := appmetrica.New(appContext, &appmetrica.Options{
 		Click:              cfg.Clickhouse,
+		KafkaWriter:        cfg.KafkaWriter,
 		MaxMindDatabaseDir: cfg.MaxMindDatabaseDir,
 	})
 	if err != nil {
@@ -112,14 +111,16 @@ func Main(ctx *cli.Context) error {
 	})
 
 	app := fiber.New(fiber.Config{
-		ServerHeader: title,
 		Prefork:      cfg.Prefork,
 		ErrorHandler: fiberext.ErrorHandler,
 	})
 
-	if err != nil {
-		return err
-	}
+	handler := gateway.NewHandler(metrica.KafkaWriter.Writer(), cfg.Internal.HandlerProcSize)
+	handler.MountRoutes(app)
+
+	go func() {
+		handler.Run(metrica.Context())
+	}()
 
 	go func() {
 		var ln net.Listener

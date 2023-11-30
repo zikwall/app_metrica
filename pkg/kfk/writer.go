@@ -8,6 +8,10 @@ type WriterWrapper struct {
 	w *kafka.Writer
 }
 
+func (c *WriterWrapper) Writer() *kafka.Writer {
+	return c.w
+}
+
 func (c *WriterWrapper) Drop() error {
 	return c.w.Close()
 }

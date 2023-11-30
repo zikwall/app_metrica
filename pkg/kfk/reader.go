@@ -8,6 +8,10 @@ type ReaderWrapper struct {
 	r *kafka.Reader
 }
 
+func (c *ReaderWrapper) Reader() *kafka.Reader {
+	return c.r
+}
+
 func (c *ReaderWrapper) Drop() error {
 	return c.r.Close()
 }

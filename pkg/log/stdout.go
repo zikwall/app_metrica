@@ -30,6 +30,10 @@ func Info(message interface{}) {
 	log.Printf("%s: %v \n", cyan, message)
 }
 
+func Infof(message string, v ...interface{}) {
+	Info(fmt.Sprintf(message, v...))
+}
+
 func Warning(message interface{}) {
 	log.Printf("%s: %v \n", yellow, message)
 }

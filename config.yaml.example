@@ -4,6 +4,10 @@ server:
     release_stage: production
   max_mind_database_dir: "./share"
   prefork: false
+  internal:
+    handler_proc_size: 16
+    consumer_per_instance_size: 2
+    debug: true
   clickhouse:
     hosts:
       - xxx.xx.xx.xx:9000

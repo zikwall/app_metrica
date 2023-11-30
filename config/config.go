@@ -18,7 +18,14 @@ type Server struct {
 	KafkaReader *kfk.ReaderOpt `yaml:"kafka_reader"`
 	KafkaWriter *kfk.WriterOpt `yaml:"kafka_writer"`
 
-	Prefork bool `yaml:"prefork"`
+	Prefork  bool     `yaml:"prefork"`
+	Internal Internal `yaml:"internal"`
+}
+
+type Internal struct {
+	HandlerProcSize         int  `yaml:"handler_proc_size"`
+	ConsumerPerInstanceSize int  `yaml:"consumer_per_instance_size"`
+	Debug                   bool `yaml:"debug"`
 }
 
 type Bugsnag struct {
