@@ -1,0 +1,12 @@
+[Unit]
+Description=EPG service
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=10s
+ExecStart=/home/master/gobuilds/epg_service --listener 2 --config-file /home/master/luntik/config.yaml
+
+[Install]
+WantedBy=multi-user.target

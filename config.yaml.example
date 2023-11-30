@@ -1,0 +1,40 @@
+server:
+  bugsnag:
+    api_key: xxxxxxxx
+    release_stage: production
+  max_mind_database_dir: "./share"
+  prefork: false
+  clickhouse:
+    hosts:
+      - xxx.xx.xx.xx:9000
+    username: xxxxxxx
+    database: user_data
+    password: "xxxxxxxxxxxxxx"
+    max_execution_time: 30
+    max_open_conns: 20
+    max_idle_conns: 15
+    max_conn_max_lifetime: 10m0s
+  kafka_reader:
+      brokers: [":1062", ":1063", ":1064"]
+      group_id: "appmetrica_main_readers"
+      group_topics: []
+      topic: "appmetrica_main_bus"
+      partition: 0
+      queuecapacity: 0
+      minbytes: 0
+      maxbytes: 010e6, #10MB
+      maxwait: 0s
+      readbatchtimeout: 0s
+      readlaginterval: 0s
+    kafka_writer:
+      brokers: [":1062", ":1063", ":1064"]
+      topic: "appmetrica_main_bus"
+      maxattempts: 0
+      writebackoffmin: 0s
+      writebackoffmax: 0s
+      batchsize: 0
+      batchbytes: 0
+      batchtimeout: 0s
+      readtimeout: 0s
+      writetimeout: 0s
+      async: false
