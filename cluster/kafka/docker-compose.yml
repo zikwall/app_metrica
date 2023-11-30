@@ -38,11 +38,12 @@ services:
       - KAFKA_CFG_NODE_ID=1
       - KAFKA_KRAFT_CLUSTER_ID=abcdefghijklmnopqrstuv
       - KAFKA_CFG_PROCESS_ROLES=controller,broker
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka-1:9093,1@kafka-2:9094
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka-1:9093,2@kafka-2:9094
+      - KAFKA_CFG_ZOOKEEPER_METADATA_MIGRATION_ENABLE=true
       # Listeners
       - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
-      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093,CONTROLLER://:9083
       - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka-1:9092,EXTERNAL://localhost:9093
       - KAFKA_INTER_BROKER_LISTENER_NAME=CLIENT
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
@@ -58,7 +59,8 @@ services:
     networks:
       - kafka-cluster
     volumes:
-      - /shared/clusters/kafka/kafka_1_data:/bitnami/kafka
+      # chmod -R g+rwX
+      - /home/master/shared/clusters/kafka/kafka_1_data:/bitnami/kafka
 
   kafka-2:
     image: docker.io/bitnami/kafka:3.6
@@ -71,11 +73,12 @@ services:
       - KAFKA_CFG_NODE_ID=2
       - KAFKA_KRAFT_CLUSTER_ID=abcdefghijklmnopqrstuv
       - KAFKA_CFG_PROCESS_ROLES=controller,broker
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka-1:9093,1@kafka-2:9094
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka-1:9093,2@kafka-2:9094
+      - KAFKA_CFG_ZOOKEEPER_METADATA_MIGRATION_ENABLE=true
       # Listeners
       - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
-      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9094,CONTROLLER://:9084
       - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka-1:9092,EXTERNAL://localhost:9094
       - KAFKA_INTER_BROKER_LISTENER_NAME=CLIENT
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
@@ -91,7 +94,7 @@ services:
     networks:
       - kafka-cluster
     volumes:
-      - /shared/clusters/kafka/kafka_2_data:/bitnami/kafka
+      - /home/master/shared/clusters/kafka/kafka_2_data:/bitnami/kafka
 
   kafdrop:
     image: obsidiandynamics/kafdrop:latest
@@ -105,9 +108,3 @@ services:
       - kafka-2
     networks:
       - kafka-cluster
-
-volumes:
-  kafka_1_data:
-    driver: local
-  kafka_2_data:
-    driver: local
