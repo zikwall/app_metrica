@@ -3,19 +3,29 @@ package consumer
 import (
 	"context"
 	"fmt"
+	"net"
 	"sync"
 
+	"github.com/mailru/easyjson"
+	"github.com/oschwald/geoip2-golang"
 	"github.com/segmentio/kafka-go"
+	clickhousebuffer "github.com/zikwall/clickhouse-buffer/v4"
+
+	"github.com/zikwall/app_metrica/pkg/domain"
 	"github.com/zikwall/app_metrica/pkg/log"
 )
 
 type Consumer struct {
 	reader *kafka.Reader
+	city   *geoip2.Reader
+	asn    *geoip2.Reader
+	writer clickhousebuffer.Writer
 
 	wg *sync.WaitGroup
 
-	poolSize int
-	debug    bool
+	poolSize          int
+	debug             bool
+	enrichWithGeoData bool
 }
 
 func (c *Consumer) Run(ctx context.Context) {
@@ -49,12 +59,72 @@ func (c *Consumer) proc(ctx context.Context, number int) {
 				m.Topic, m.Partition, m.Offset, string(m.Key), string(m.Value),
 			)
 		}
+
+		event := &domain.EventExtended{}
+		if err = easyjson.Unmarshal(m.Value, event); err != nil {
+			log.Warningf("consumer proc: unmarshal json %s", err)
+			continue
+		}
+
+		record := domain.RecordFromEvent(event)
+
+		if c.enrichWithGeoData && event.IP != "" {
+			nIP := net.ParseIP(event.IP)
+			if nIP != nil {
+				c.enrichRecordLocation(record, nIP)
+			}
+		}
+
+		c.writer.TryWriteRow(record)
 	}
 }
 
-func New(reader *kafka.Reader, poolSize int, debug bool) *Consumer {
+func (c *Consumer) enrichRecordLocation(record *domain.Record, nIP net.IP) {
+	var (
+		err  error
+		city *geoip2.City
+		as   *geoip2.ASN
+	)
+
+	if city, err = c.city.City(nIP); err == nil {
+		record.CountryIsoCode = city.Country.IsoCode
+
+		cityFound := false
+		if name, ok := city.City.Names["en"]; ok {
+			record.City = name
+			cityFound = true
+		}
+
+		if !cityFound {
+			if name, ok := city.City.Names["EN"]; ok {
+				record.City = name
+				cityFound = true
+			}
+		}
+
+		if !cityFound && len(city.City.Names) > 0 {
+			// peek first city name, unordered
+			for k := range city.City.Names {
+				record.City = city.City.Names[k]
+				break
+			}
+		}
+
+		if len(city.Subdivisions) > 0 {
+			record.Region = city.Subdivisions[0].IsoCode
+		}
+	}
+
+	if as, err = c.asn.ASN(nIP); err == nil {
+		record.AS = uint32(as.AutonomousSystemNumber)
+		record.ORG = as.AutonomousSystemOrganization
+	}
+}
+
+func New(reader *kafka.Reader, writer clickhousebuffer.Writer, poolSize int, debug bool) *Consumer {
 	return &Consumer{
 		reader:   reader,
+		writer:   writer,
 		wg:       &sync.WaitGroup{},
 		poolSize: poolSize,
 		debug:    debug,

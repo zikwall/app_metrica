@@ -78,6 +78,7 @@ func Main(ctx *cli.Context) error {
 		Click:              cfg.Clickhouse,
 		KafkaReader:        cfg.KafkaReader,
 		MaxMindDatabaseDir: cfg.MaxMindDatabaseDir,
+		Internal:           cfg.Internal,
 	})
 	if err != nil {
 		return err
@@ -131,7 +132,12 @@ func Main(ctx *cli.Context) error {
 		}
 	}()
 
-	consul := consumer.New(metrica.KafkaReader.Reader(), cfg.Internal.ConsumerPerInstanceSize, cfg.Internal.Debug)
+	consul := consumer.New(
+		metrica.KafkaReader.Reader(),
+		metrica.Writer,
+		cfg.Internal.ConsumerPerInstanceSize,
+		cfg.Internal.Debug,
+	)
 	go func() {
 		consul.Run(metrica.Context())
 	}()

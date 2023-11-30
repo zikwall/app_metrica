@@ -23,5 +23,7 @@ go.work
 .idea
 
 config.yaml
+config-producer.yaml
+config-consumer.yaml
 
 *.mmdb

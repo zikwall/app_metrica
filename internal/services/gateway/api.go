@@ -10,14 +10,20 @@ import (
 	"github.com/segmentio/kafka-go"
 
 	"github.com/zikwall/app_metrica/pkg/domain"
+	"github.com/zikwall/app_metrica/pkg/fiberext"
 	"github.com/zikwall/app_metrica/pkg/log"
 )
+
+type packet struct {
+	data []byte
+	ip   string
+}
 
 type Handler struct {
 	writer *kafka.Writer
 
 	wg    *sync.WaitGroup
-	queue chan []byte
+	queue chan packet
 
 	poolSize int
 }
@@ -36,12 +42,18 @@ func (h *Handler) Event(ctx *fiber.Ctx) error {
 	copy(dst, body)
 
 	// non-blocking, asynchronously write to queue and Kafka
-	h.queue <- dst
+	h.queue <- packet{
+		data: dst,
+		ip:   fiberext.RealIP(ctx),
+	}
 	return ctx.SendStatus(http.StatusNoContent)
 }
 
 func (h *Handler) EventSync(ctx *fiber.Ctx) error {
-	if err := h.handle(ctx.Context(), ctx.Body()); err != nil {
+	if err := h.handle(ctx.Context(), packet{
+		data: ctx.Body(),
+		ip:   fiberext.RealIP(ctx),
+	}); err != nil {
 		return err
 	}
 	return ctx.SendStatus(http.StatusNoContent)
@@ -72,18 +84,18 @@ func (h *Handler) proc(ctx context.Context, number int) {
 			return
 		case b := <-h.queue:
 			if err = h.handle(ctx, b); err != nil {
-				log.Warningf("proc: %s", err)
+				log.Warningf("producer proc: handle %s", err)
 			}
 		}
 	}
 }
 
-func (h *Handler) handle(ctx context.Context, body []byte) error {
+func (h *Handler) handle(ctx context.Context, p packet) error {
 	var (
 		err   error
 		event = &domain.Event{}
 	)
-	if err = easyjson.Unmarshal(body, event); err != nil {
+	if err = easyjson.Unmarshal(p.data, event); err != nil {
 		return err
 	}
 
@@ -95,8 +107,11 @@ func (h *Handler) handle(ctx context.Context, body []byte) error {
 	//   return err
 	// }
 
+	exEvent := domain.ExtendEvent(event)
+	exEvent.IP = p.ip
+
 	var nextForwardingBytes []byte
-	if nextForwardingBytes, err = easyjson.Marshal(event); err != nil {
+	if nextForwardingBytes, err = easyjson.Marshal(exEvent); err != nil {
 		return err
 	}
 
@@ -109,7 +124,7 @@ func NewHandler(writer *kafka.Writer, poolSize int) *Handler {
 	return &Handler{
 		writer:   writer,
 		wg:       &sync.WaitGroup{},
-		queue:    make(chan []byte, poolSize+10000),
+		queue:    make(chan packet, poolSize+10000),
 		poolSize: poolSize,
 	}
 }

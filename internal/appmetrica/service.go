@@ -6,7 +6,13 @@ import (
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/segmentio/kafka-go"
+	"github.com/zikwall/app_metrica/pkg/domain"
+	clickhousebuffer "github.com/zikwall/clickhouse-buffer/v4"
+	"github.com/zikwall/clickhouse-buffer/v4/src/buffer/cxmem"
+	"github.com/zikwall/clickhouse-buffer/v4/src/cx"
+	"github.com/zikwall/clickhouse-buffer/v4/src/db/cxnative"
 
+	"github.com/zikwall/app_metrica/config"
 	"github.com/zikwall/app_metrica/pkg/click"
 	"github.com/zikwall/app_metrica/pkg/drop"
 	"github.com/zikwall/app_metrica/pkg/geolocation"
@@ -19,15 +25,20 @@ type Options struct {
 	KafkaWriter *kfk.WriterOpt
 
 	MaxMindDatabaseDir string
+
+	Internal config.Internal
 }
 
 type AppMetrica struct {
 	*drop.Impl
 
-	ReaderCity  *geolocation.Wrapper
-	Clickhouse  *click.Wrapper
-	KafkaReader *kfk.ReaderWrapper
-	KafkaWriter *kfk.WriterWrapper
+	ReaderCity    *geolocation.Wrapper
+	Clickhouse    *click.Wrapper
+	KafkaReader   *kfk.ReaderWrapper
+	KafkaWriter   *kfk.WriterWrapper
+	Writer        clickhousebuffer.Writer
+	bufferWrapper *click.BufferWrapper
+	clientWrapper *click.ClientWrapper
 }
 
 func New(ctx context.Context, opt *Options) (*AppMetrica, error) {
@@ -63,12 +74,35 @@ func New(ctx context.Context, opt *Options) (*AppMetrica, error) {
 			MaxOpenConns:    opt.Click.MaxOpenConns,
 			MaxIdleConns:    opt.Click.MaxIdleConns,
 			ConnMaxLifetime: opt.Click.MaxConnMaxLifetime,
-			Debug:           false,
+			Debug:           opt.Internal.Debug,
 		})
 		if err != nil {
 			return nil, err
 		}
-		metrica.AddDropper(metrica.Clickhouse)
+		// metrica.AddDropper(metrica.Clickhouse)
+
+		ch := cxnative.NewClickhouseWithConn(metrica.Clickhouse.Conn(), &cx.RuntimeOptions{
+			WriteTimeout: opt.Internal.ChWriteTimeout,
+		})
+		client := clickhousebuffer.NewClientWithOptions(ctx, ch, clickhousebuffer.NewOptions(
+			clickhousebuffer.WithFlushInterval(opt.Internal.BufFlushInterval),
+			clickhousebuffer.WithBatchSize(opt.Internal.BufSize+1),
+			clickhousebuffer.WithDebugMode(opt.Internal.Debug),
+			clickhousebuffer.WithRetry(true),
+		))
+
+		metrica.bufferWrapper = click.NewBufferWrapper(ch)
+		metrica.clientWrapper = click.NewClientWrapper(client)
+
+		metrica.AddDroppers(metrica.bufferWrapper, metrica.clientWrapper)
+
+		metrica.Writer = client.Writer(
+			clickhouse.Context(context.Background(), clickhouse.WithSettings(clickhouse.Settings{
+				"max_execution_time": opt.Internal.ChWriteTimeout.Seconds(),
+			})),
+			cx.NewView(opt.Internal.MetricTable, domain.Columns()),
+			cxmem.NewBuffer(client.Options().BatchSize()),
+		)
 	}
 
 	if opt.KafkaReader != nil {

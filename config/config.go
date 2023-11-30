@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"os"
+	"time"
 
 	"github.com/zikwall/app_metrica/pkg/kfk"
 	"gopkg.in/yaml.v3"
@@ -23,9 +24,13 @@ type Server struct {
 }
 
 type Internal struct {
-	HandlerProcSize         int  `yaml:"handler_proc_size"`
-	ConsumerPerInstanceSize int  `yaml:"consumer_per_instance_size"`
-	Debug                   bool `yaml:"debug"`
+	HandlerProcSize         int           `yaml:"handler_proc_size"`
+	ConsumerPerInstanceSize int           `yaml:"consumer_per_instance_size"`
+	BufSize                 uint          `yaml:"buf_size"`
+	BufFlushInterval        uint          `yaml:"buf_flush_interval"`
+	ChWriteTimeout          time.Duration `yaml:"ch_write_timeout"`
+	MetricTable             string        `yaml:"metric_table"`
+	Debug                   bool          `yaml:"debug"`
 }
 
 type Bugsnag struct {
