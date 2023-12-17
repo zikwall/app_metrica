@@ -10,7 +10,7 @@
 
 ### UI
 
-- **KafDrop**: http://<host>:9000/
+- **KafDrop**: http://<host>:8086/
 - **UI for Apache Kafka**: http://<host>:8087/
 
 ### How work with Clickhouse
