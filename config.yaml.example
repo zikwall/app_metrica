@@ -30,7 +30,7 @@ server:
     partition: 0
     queuecapacity: 0
     minbytes: 0
-    maxbytes: 010e6, #10MB
+    maxbytes: 010e6 #10MB
     maxwait: 0s
     readbatchtimeout: 0s
     readlaginterval: 0s
