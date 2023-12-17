@@ -1,5 +1,5 @@
 [Unit]
-Description=EPG service
+Description=AppMetrica Consumer
 After=network.target
 
 [Service]
