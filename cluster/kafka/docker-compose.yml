@@ -107,4 +107,4 @@ services:
       - KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS=kafka-0:9092
       - KAFKA_CLUSTERS_0_NAME=local
     volumes:
-      - /home/master/clusters/kui/config.yml:/etc/kafkaui/dynamic_config.yaml
+      - /home/master/shared/clusters/kui/config.yml:/etc/kafkaui/dynamic_config.yaml
