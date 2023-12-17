@@ -8,7 +8,7 @@ server:
     handler_proc_size: 16
     consumer_per_instance_size: 2
     debug: true
-    buf_flush_interval: 5
+    buf_flush_interval: 5000
     buf_size: 5000
     ch_write_timeout: 0m15s
     metric_table: appmetrica.events
