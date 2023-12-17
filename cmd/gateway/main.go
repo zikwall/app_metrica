@@ -38,7 +38,7 @@ func main() {
 				Name:     "bind-socket",
 				Usage:    "Путь к Unix сокет файлу",
 				Required: false,
-				Value:    "/tmp/app_metrica.sock",
+				Value:    "/tmp/gateway.sock",
 				EnvVars:  []string{"APPMETRICA_BIND_SOCKET"},
 			},
 			&cli.IntFlag{

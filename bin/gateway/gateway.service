@@ -1,0 +1,12 @@
+[Unit]
+Description=AppMetrica Gateway
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=10s
+ExecStart=/var/www/builds/gateway --listener 2 --config-file /var/www/app_metrica/config.yaml
+
+[Install]
+WantedBy=multi-user.target

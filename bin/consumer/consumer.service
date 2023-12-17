@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 Restart=always
 RestartSec=10s
-ExecStart=/home/master/gobuilds/epg_service --listener 2 --config-file /home/master/luntik/config.yaml
+ExecStart=/var/www/builds/consumer --listener 2 --config-file /var/www/app_metrica/config.yaml
 
 [Install]
 WantedBy=multi-user.target
