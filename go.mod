@@ -6,8 +6,10 @@ require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.15.0
 	github.com/bugsnag/bugsnag-go/v2 v2.2.0
 	github.com/gofiber/fiber/v2 v2.51.0
+	github.com/mailru/easyjson v0.7.7
 	github.com/oschwald/geoip2-golang v1.9.0
 	github.com/segmentio/kafka-go v0.4.46
+	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli/v2 v2.25.7
 	github.com/zikwall/clickhouse-buffer/v4 v4.0.5
 	gopkg.in/yaml.v3 v3.0.1
@@ -26,7 +28,6 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/klauspost/compress v1.17.3 // indirect
-	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
@@ -39,8 +40,6 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
-	github.com/stretchr/objx v0.5.0 // indirect
-	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.51.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
