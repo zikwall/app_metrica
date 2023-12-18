@@ -1,5 +1,13 @@
 ### How work with Apache Kafka in Docker
 
+```shell
+$ docker exec -t 0fc454d70be2 /opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server kafka_kafka-1_1:9092 --topic appmetrica_main_bus --describe
+$ docker exec -t 0fc454d70be2 /opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server kafka_kafka-1_1:9092 --topic appmetrica_main_bus --delete
+$ docker exec -it 0fc454d70be2 /opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server kafka_kafka-1_1:9092 --topic appmetrica_main_bus --create --replication-factor 1 --partitions 6
+```
+
+### OLD
+
 - [x] Create new topic
 
 ```shell script
