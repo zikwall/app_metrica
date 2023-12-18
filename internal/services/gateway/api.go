@@ -35,9 +35,11 @@ func (h *Handler) MountRoutes(app *fiber.App) {
 }
 
 func (h *Handler) Event(ctx *fiber.Ctx) error {
+	// Returned value is only valid within the handler. Do not store any references.
+	// Make copies or use the Immutable setting instead.
 	body := ctx.Body()
 
-	// we need copy slice, because arrays, yes
+	// See: https://docs.gofiber.io/#zero-allocation
 	dst := make([]byte, len(body))
 	copy(dst, body)
 
