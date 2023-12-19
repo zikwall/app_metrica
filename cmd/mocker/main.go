@@ -94,8 +94,8 @@ func randomPayload(rnd *randomMachine) *Payload {
 func main() {
 	application := cli.App{
 		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:     "address",
+			&cli.StringSliceFlag{
+				Name:     "addresses",
 				Usage:    "URL address",
 				Required: true,
 			},
@@ -149,13 +149,18 @@ func Main(ctx *cli.Context) error {
 		log.Info("app context is canceled, AppMetrica Mocker is down!")
 	}()
 
-	u, err := url.Parse(ctx.String("address"))
-	if err != nil {
-		return err
+	urls := make([]*url.URL, 0, len(ctx.StringSlice("addresses")))
+	for _, address := range ctx.StringSlice("addresses") {
+		u, err := url.Parse(address)
+		if err != nil {
+			return err
+		}
+
+		urls = append(urls, u)
 	}
 
 	w := &worker{
-		URL:     u,
+		URLs:    urls,
 		N:       ctx.Int("count"),
 		C:       ctx.Int("parallelism"),
 		Timeout: ctx.Int("timeout"),
@@ -178,7 +183,6 @@ func Main(ctx *cli.Context) error {
 			packages:           generateStrings(1000, gofakeit.Letter, 10),
 			appMetricaIDs:      generateStrings(1000, gofakeit.UUID),
 		},
-		done: make(chan struct{}),
 	}
 
 	w.work(appContext)
@@ -186,7 +190,7 @@ func Main(ctx *cli.Context) error {
 }
 
 type worker struct {
-	URL *url.URL
+	URLs []*url.URL
 
 	// N is the total number of requests to make.
 	N int
@@ -208,12 +212,19 @@ type worker struct {
 
 	completedRequestsCount int64
 	completedWithErrors    int64
+	next                   uint32
+	finished               uint64
 
-	done chan struct{}
+	ctx    context.Context
+	cancel context.CancelFunc
+}
+
+func (w *worker) Next() *url.URL {
+	return w.URLs[(int(atomic.AddUint32(&w.next, 1))-1)%len(w.URLs)]
 }
 
 func (w *worker) runWorker(ctx context.Context, client *http.Client, n int) {
-	log.Infof("run worker: %d", n)
+	log.Infof("run worker with capacity: %d", n)
 
 	var throttle <-chan time.Time
 	if w.QPS > 0 {
@@ -223,8 +234,6 @@ func (w *worker) runWorker(ctx context.Context, client *http.Client, n int) {
 	for i := 0; i < n; i++ {
 		select {
 		case <-ctx.Done():
-			return
-		case <-w.done:
 			return
 		default:
 			if w.QPS > 0 {
@@ -270,13 +279,15 @@ func (w *worker) runWorker(ctx context.Context, client *http.Client, n int) {
 		}
 	}
 
-	<-time.After(time.Second)
-	log.Info("all requests completed, wait some time...")
-	w.done <- struct{}{}
+	if atomic.AddUint64(&w.finished, 1) == uint64(w.C) {
+		w.cancel()
+	}
 }
 
 func (w *worker) work(ctx context.Context) {
 	const maxIdleConn = 500
+
+	w.ctx, w.cancel = context.WithCancel(ctx)
 
 	var wg sync.WaitGroup
 	wg.Add(w.C)
@@ -284,7 +295,7 @@ func (w *worker) work(ctx context.Context) {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: true,
-			ServerName:         w.URL.Host,
+			ServerName:         w.URLs[0].Host,
 		},
 		MaxIdleConnsPerHost: min(w.C, maxIdleConn),
 	}
@@ -292,7 +303,7 @@ func (w *worker) work(ctx context.Context) {
 
 	for i := 0; i < w.C; i++ {
 		go func() {
-			w.runWorker(ctx, client, w.N/w.C)
+			w.runWorker(w.ctx, client, w.N/w.C)
 			wg.Done()
 		}()
 	}
@@ -306,9 +317,7 @@ func (w *worker) work(ctx context.Context) {
 		}()
 		for {
 			select {
-			case <-w.done:
-				return
-			case <-ctx.Done():
+			case <-w.ctx.Done():
 				return
 			case <-ticker.C:
 				log.Infof("[completed requests]: %d", atomic.LoadInt64(&w.completedRequestsCount))
@@ -318,6 +327,8 @@ func (w *worker) work(ctx context.Context) {
 	}()
 
 	wg.Wait()
+	log.Info("all requests completed, wait some time...")
+	<-time.After(time.Second * 5)
 }
 
 func (w *worker) httpRequestAsync(ctx context.Context, client *http.Client, payload *Payload) error {
@@ -326,7 +337,8 @@ func (w *worker) httpRequestAsync(ctx context.Context, client *http.Client, payl
 		return err
 	}
 
-	address := fmt.Sprintf("%s://%s%s", w.URL.Scheme, w.URL.Host, "/internal/api/v1/event")
+	u := w.Next()
+	address := fmt.Sprintf("%s://%s%s", u.Scheme, u.Host, "/internal/api/v1/event")
 	req, err := http.NewRequestWithContext(
 		ctx, http.MethodPost, address, bytes.NewReader(b),
 	)

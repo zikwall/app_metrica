@@ -1,4 +1,4 @@
-CREATE TABLE appmetrica.events ON CLUSTER main_cluster
+CREATE TABLE appmetrica.events ON CLUSTER cluster_1
 (
     `application_id` Int64,
     `ios_ifa` String,
@@ -36,9 +36,9 @@ CREATE TABLE appmetrica.events ON CLUSTER main_cluster
     `as` UInt32,
     `org` String
 )
-ENGINE = Distributed('main_cluster', 'appmetrica', 'events_sharded', rand());
+ENGINE = Distributed('cluster_1', 'appmetrica', 'events_sharded', rand());
 
-CREATE TABLE appmetrica.events_sharded ON CLUSTER main_cluster
+CREATE TABLE appmetrica.events_sharded ON CLUSTER cluster_1
 (
    `application_id` Int64,
    `ios_ifa` String,
@@ -75,7 +75,7 @@ CREATE TABLE appmetrica.events_sharded ON CLUSTER main_cluster
    `region` String,
    `as` UInt32,
    `org` String
-) ENGINE = MergeTree()
+) ENGINE = ReplicatedMergeTree('/clickhouse/tables/{layer}-{shard}/events_sharded', '{replica}')
 PARTITION BY toYYYYMM(event_receive_datetime)
 ORDER BY (event_receive_datetime, appmetrica_device_id, ip)
 TTL event_receive_datetime + INTERVAL 16 DAY;
