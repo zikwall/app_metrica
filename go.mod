@@ -19,6 +19,7 @@ require (
 	github.com/ClickHouse/ch-go v0.60.0 // indirect
 	github.com/Rican7/retry v0.3.1 // indirect
 	github.com/andybalholm/brotli v1.0.6 // indirect
+	github.com/brianvoe/gofakeit/v6 v6.26.3 // indirect
 	github.com/bugsnag/panicwrap v1.3.4 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
