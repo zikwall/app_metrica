@@ -12,6 +12,7 @@ server:
     buf_size: 5000
     ch_write_timeout: 0m15s
     metric_table: appmetrica.events
+    with_geo: true
   clickhouse:
     hosts:
       - xxxxxx:9000

@@ -74,12 +74,6 @@ func easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain(in *jlexer.Lexer,
 			}
 		case "event_timestamp":
 			out.EventTimestamp = int64(in.Int64())
-		case "event_receive_datetime":
-			if data := in.Raw(); in.Ok() {
-				in.AddError((out.EventReceiveDatetime).UnmarshalJSON(data))
-			}
-		case "event_receive_timestamp":
-			out.EventReceiveTimestamp = int64(in.Int64())
 		case "connection_type":
 			out.ConnectionType = string(in.String())
 		case "operator_name":
@@ -88,10 +82,6 @@ func easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain(in *jlexer.Lexer,
 			out.Mcc = string(in.String())
 		case "mnc":
 			out.Mnc = string(in.String())
-		case "country_iso_code":
-			out.CountryIsoCode = string(in.String())
-		case "city":
-			out.City = string(in.String())
 		case "appmetrica_device_id":
 			out.AppmetricaDeviceID = string(in.String())
 		case "installation_id":
@@ -100,6 +90,78 @@ func easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain(in *jlexer.Lexer,
 			out.SessionID = string(in.String())
 		case "ip":
 			out.IP = string(in.String())
+		case "event_receive_datetime":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.EventReceiveDatetime).UnmarshalJSON(data))
+			}
+		case "event_receive_timestamp":
+			out.EventReceiveTimestamp = int64(in.Int64())
+		case "country_iso_code":
+			out.CountryIsoCode = string(in.String())
+		case "city":
+			out.City = string(in.String())
+		case "timezone":
+			out.Timezone = float64(in.Float64())
+		case "physical_screen_height":
+			out.PhysicalScreenHeight = int(in.Int())
+		case "physical_screen_width":
+			out.PhysicalScreenWidth = int(in.Int())
+		case "screen_height":
+			out.ScreenHeight = int(in.Int())
+		case "screen_weight":
+			out.ScreenWeight = int(in.Int())
+		case "screen_aspect_ratio":
+			out.ScreenAspectRatio = string(in.String())
+		case "screen_orientation":
+			out.ScreenOrientation = string(in.String())
+		case "browser":
+			out.Browser = string(in.String())
+		case "browser_version":
+			out.BrowserVersion = string(in.String())
+		case "cookie_enabled":
+			out.CookieEnabled = bool(in.Bool())
+		case "js_enabled":
+			out.JsEnabled = bool(in.Bool())
+		case "title":
+			out.Title = string(in.String())
+		case "url":
+			out.URL = string(in.String())
+		case "referer":
+			out.Referer = string(in.String())
+		case "utm_campaign":
+			out.UtmCampaign = string(in.String())
+		case "utm_content":
+			out.UtmContent = string(in.String())
+		case "utm_source":
+			out.UtmSource = string(in.String())
+		case "utm_medium":
+			out.UtmMedium = string(in.String())
+		case "utm_term":
+			out.UtmTerm = string(in.String())
+		case "uniq_id":
+			out.UniqID = string(in.String())
+		case "device_id":
+			out.DeviceID = string(in.String())
+		case "platform":
+			out.Platform = string(in.String())
+		case "app":
+			out.App = string(in.String())
+		case "version":
+			out.Version = int(in.Int())
+		case "user_agent":
+			out.UserAgent = string(in.String())
+		case "xlhd_agent":
+			out.XLHDAgent = string(in.String())
+		case "hardware_or_gui":
+			out.HardwareOrGUI = string(in.String())
+		case "to_queue_datetime":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.ToQueueDatetime).UnmarshalJSON(data))
+			}
+		case "to_queue_timestamp":
+			out.ToQueueTimestamp = int64(in.Int64())
+		case "sdk_version":
+			out.SdkVersion = int(in.Int())
 		default:
 			in.SkipRecursive()
 		}
@@ -205,16 +267,6 @@ func easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain(out *jwriter.Writ
 		out.Int64(int64(in.EventTimestamp))
 	}
 	{
-		const prefix string = ",\"event_receive_datetime\":"
-		out.RawString(prefix)
-		out.Raw((in.EventReceiveDatetime).MarshalJSON())
-	}
-	{
-		const prefix string = ",\"event_receive_timestamp\":"
-		out.RawString(prefix)
-		out.Int64(int64(in.EventReceiveTimestamp))
-	}
-	{
 		const prefix string = ",\"connection_type\":"
 		out.RawString(prefix)
 		out.String(string(in.ConnectionType))
@@ -235,16 +287,6 @@ func easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain(out *jwriter.Writ
 		out.String(string(in.Mnc))
 	}
 	{
-		const prefix string = ",\"country_iso_code\":"
-		out.RawString(prefix)
-		out.String(string(in.CountryIsoCode))
-	}
-	{
-		const prefix string = ",\"city\":"
-		out.RawString(prefix)
-		out.String(string(in.City))
-	}
-	{
 		const prefix string = ",\"appmetrica_device_id\":"
 		out.RawString(prefix)
 		out.String(string(in.AppmetricaDeviceID))
@@ -263,6 +305,176 @@ func easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain(out *jwriter.Writ
 		const prefix string = ",\"ip\":"
 		out.RawString(prefix)
 		out.String(string(in.IP))
+	}
+	{
+		const prefix string = ",\"event_receive_datetime\":"
+		out.RawString(prefix)
+		out.Raw((in.EventReceiveDatetime).MarshalJSON())
+	}
+	{
+		const prefix string = ",\"event_receive_timestamp\":"
+		out.RawString(prefix)
+		out.Int64(int64(in.EventReceiveTimestamp))
+	}
+	{
+		const prefix string = ",\"country_iso_code\":"
+		out.RawString(prefix)
+		out.String(string(in.CountryIsoCode))
+	}
+	{
+		const prefix string = ",\"city\":"
+		out.RawString(prefix)
+		out.String(string(in.City))
+	}
+	{
+		const prefix string = ",\"timezone\":"
+		out.RawString(prefix)
+		out.Float64(float64(in.Timezone))
+	}
+	{
+		const prefix string = ",\"physical_screen_height\":"
+		out.RawString(prefix)
+		out.Int(int(in.PhysicalScreenHeight))
+	}
+	{
+		const prefix string = ",\"physical_screen_width\":"
+		out.RawString(prefix)
+		out.Int(int(in.PhysicalScreenWidth))
+	}
+	{
+		const prefix string = ",\"screen_height\":"
+		out.RawString(prefix)
+		out.Int(int(in.ScreenHeight))
+	}
+	{
+		const prefix string = ",\"screen_weight\":"
+		out.RawString(prefix)
+		out.Int(int(in.ScreenWeight))
+	}
+	{
+		const prefix string = ",\"screen_aspect_ratio\":"
+		out.RawString(prefix)
+		out.String(string(in.ScreenAspectRatio))
+	}
+	{
+		const prefix string = ",\"screen_orientation\":"
+		out.RawString(prefix)
+		out.String(string(in.ScreenOrientation))
+	}
+	{
+		const prefix string = ",\"browser\":"
+		out.RawString(prefix)
+		out.String(string(in.Browser))
+	}
+	{
+		const prefix string = ",\"browser_version\":"
+		out.RawString(prefix)
+		out.String(string(in.BrowserVersion))
+	}
+	{
+		const prefix string = ",\"cookie_enabled\":"
+		out.RawString(prefix)
+		out.Bool(bool(in.CookieEnabled))
+	}
+	{
+		const prefix string = ",\"js_enabled\":"
+		out.RawString(prefix)
+		out.Bool(bool(in.JsEnabled))
+	}
+	{
+		const prefix string = ",\"title\":"
+		out.RawString(prefix)
+		out.String(string(in.Title))
+	}
+	{
+		const prefix string = ",\"url\":"
+		out.RawString(prefix)
+		out.String(string(in.URL))
+	}
+	{
+		const prefix string = ",\"referer\":"
+		out.RawString(prefix)
+		out.String(string(in.Referer))
+	}
+	{
+		const prefix string = ",\"utm_campaign\":"
+		out.RawString(prefix)
+		out.String(string(in.UtmCampaign))
+	}
+	{
+		const prefix string = ",\"utm_content\":"
+		out.RawString(prefix)
+		out.String(string(in.UtmContent))
+	}
+	{
+		const prefix string = ",\"utm_source\":"
+		out.RawString(prefix)
+		out.String(string(in.UtmSource))
+	}
+	{
+		const prefix string = ",\"utm_medium\":"
+		out.RawString(prefix)
+		out.String(string(in.UtmMedium))
+	}
+	{
+		const prefix string = ",\"utm_term\":"
+		out.RawString(prefix)
+		out.String(string(in.UtmTerm))
+	}
+	{
+		const prefix string = ",\"uniq_id\":"
+		out.RawString(prefix)
+		out.String(string(in.UniqID))
+	}
+	{
+		const prefix string = ",\"device_id\":"
+		out.RawString(prefix)
+		out.String(string(in.DeviceID))
+	}
+	{
+		const prefix string = ",\"platform\":"
+		out.RawString(prefix)
+		out.String(string(in.Platform))
+	}
+	{
+		const prefix string = ",\"app\":"
+		out.RawString(prefix)
+		out.String(string(in.App))
+	}
+	{
+		const prefix string = ",\"version\":"
+		out.RawString(prefix)
+		out.Int(int(in.Version))
+	}
+	{
+		const prefix string = ",\"user_agent\":"
+		out.RawString(prefix)
+		out.String(string(in.UserAgent))
+	}
+	{
+		const prefix string = ",\"xlhd_agent\":"
+		out.RawString(prefix)
+		out.String(string(in.XLHDAgent))
+	}
+	{
+		const prefix string = ",\"hardware_or_gui\":"
+		out.RawString(prefix)
+		out.String(string(in.HardwareOrGUI))
+	}
+	{
+		const prefix string = ",\"to_queue_datetime\":"
+		out.RawString(prefix)
+		out.Raw((in.ToQueueDatetime).MarshalJSON())
+	}
+	{
+		const prefix string = ",\"to_queue_timestamp\":"
+		out.RawString(prefix)
+		out.Int64(int64(in.ToQueueTimestamp))
+	}
+	{
+		const prefix string = ",\"sdk_version\":"
+		out.RawString(prefix)
+		out.Int(int(in.SdkVersion))
 	}
 	out.RawByte('}')
 }
@@ -361,6 +573,54 @@ func easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain1(in *jlexer.Lexer
 			out.InstallationID = string(in.String())
 		case "session_id":
 			out.SessionID = string(in.String())
+		case "timezone":
+			out.Timezone = float64(in.Float64())
+		case "physical_screen_height":
+			out.PhysicalScreenHeight = int(in.Int())
+		case "physical_screen_width":
+			out.PhysicalScreenWidth = int(in.Int())
+		case "screen_height":
+			out.ScreenHeight = int(in.Int())
+		case "screen_weight":
+			out.ScreenWeight = int(in.Int())
+		case "screen_aspect_ratio":
+			out.ScreenAspectRatio = string(in.String())
+		case "screen_orientation":
+			out.ScreenOrientation = string(in.String())
+		case "browser":
+			out.Browser = string(in.String())
+		case "browser_version":
+			out.BrowserVersion = string(in.String())
+		case "cookie_enabled":
+			out.CookieEnabled = bool(in.Bool())
+		case "js_enabled":
+			out.JsEnabled = bool(in.Bool())
+		case "title":
+			out.Title = string(in.String())
+		case "url":
+			out.URL = string(in.String())
+		case "referer":
+			out.Referer = string(in.String())
+		case "utm_campaign":
+			out.UtmCampaign = string(in.String())
+		case "utm_content":
+			out.UtmContent = string(in.String())
+		case "utm_source":
+			out.UtmSource = string(in.String())
+		case "utm_medium":
+			out.UtmMedium = string(in.String())
+		case "utm_term":
+			out.UtmTerm = string(in.String())
+		case "device_id":
+			out.DeviceID = string(in.String())
+		case "platform":
+			out.Platform = string(in.String())
+		case "app":
+			out.App = string(in.String())
+		case "version":
+			out.Version = int(in.Int())
+		case "sdk_version":
+			out.SdkVersion = int(in.Int())
 		default:
 			in.SkipRecursive()
 		}
@@ -499,6 +759,126 @@ func easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain1(out *jwriter.Wri
 		const prefix string = ",\"session_id\":"
 		out.RawString(prefix)
 		out.String(string(in.SessionID))
+	}
+	{
+		const prefix string = ",\"timezone\":"
+		out.RawString(prefix)
+		out.Float64(float64(in.Timezone))
+	}
+	{
+		const prefix string = ",\"physical_screen_height\":"
+		out.RawString(prefix)
+		out.Int(int(in.PhysicalScreenHeight))
+	}
+	{
+		const prefix string = ",\"physical_screen_width\":"
+		out.RawString(prefix)
+		out.Int(int(in.PhysicalScreenWidth))
+	}
+	{
+		const prefix string = ",\"screen_height\":"
+		out.RawString(prefix)
+		out.Int(int(in.ScreenHeight))
+	}
+	{
+		const prefix string = ",\"screen_weight\":"
+		out.RawString(prefix)
+		out.Int(int(in.ScreenWeight))
+	}
+	{
+		const prefix string = ",\"screen_aspect_ratio\":"
+		out.RawString(prefix)
+		out.String(string(in.ScreenAspectRatio))
+	}
+	{
+		const prefix string = ",\"screen_orientation\":"
+		out.RawString(prefix)
+		out.String(string(in.ScreenOrientation))
+	}
+	{
+		const prefix string = ",\"browser\":"
+		out.RawString(prefix)
+		out.String(string(in.Browser))
+	}
+	{
+		const prefix string = ",\"browser_version\":"
+		out.RawString(prefix)
+		out.String(string(in.BrowserVersion))
+	}
+	{
+		const prefix string = ",\"cookie_enabled\":"
+		out.RawString(prefix)
+		out.Bool(bool(in.CookieEnabled))
+	}
+	{
+		const prefix string = ",\"js_enabled\":"
+		out.RawString(prefix)
+		out.Bool(bool(in.JsEnabled))
+	}
+	{
+		const prefix string = ",\"title\":"
+		out.RawString(prefix)
+		out.String(string(in.Title))
+	}
+	{
+		const prefix string = ",\"url\":"
+		out.RawString(prefix)
+		out.String(string(in.URL))
+	}
+	{
+		const prefix string = ",\"referer\":"
+		out.RawString(prefix)
+		out.String(string(in.Referer))
+	}
+	{
+		const prefix string = ",\"utm_campaign\":"
+		out.RawString(prefix)
+		out.String(string(in.UtmCampaign))
+	}
+	{
+		const prefix string = ",\"utm_content\":"
+		out.RawString(prefix)
+		out.String(string(in.UtmContent))
+	}
+	{
+		const prefix string = ",\"utm_source\":"
+		out.RawString(prefix)
+		out.String(string(in.UtmSource))
+	}
+	{
+		const prefix string = ",\"utm_medium\":"
+		out.RawString(prefix)
+		out.String(string(in.UtmMedium))
+	}
+	{
+		const prefix string = ",\"utm_term\":"
+		out.RawString(prefix)
+		out.String(string(in.UtmTerm))
+	}
+	{
+		const prefix string = ",\"device_id\":"
+		out.RawString(prefix)
+		out.String(string(in.DeviceID))
+	}
+	{
+		const prefix string = ",\"platform\":"
+		out.RawString(prefix)
+		out.String(string(in.Platform))
+	}
+	{
+		const prefix string = ",\"app\":"
+		out.RawString(prefix)
+		out.String(string(in.App))
+	}
+	{
+		const prefix string = ",\"version\":"
+		out.RawString(prefix)
+		out.Int(int(in.Version))
+	}
+	{
+		const prefix string = ",\"sdk_version\":"
+		out.RawString(prefix)
+		out.Int(int(in.SdkVersion))
 	}
 	out.RawByte('}')
 }

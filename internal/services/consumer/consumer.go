@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/mailru/easyjson"
 	"github.com/oschwald/geoip2-golang"
@@ -52,8 +53,10 @@ func (c *Consumer) proc(ctx context.Context, number int) {
 	for {
 		m, err = c.reader.ReadMessage(ctx)
 		if err != nil {
-			break
+			continue
 		}
+
+		now := time.Now()
 		if c.debug {
 			fmt.Printf("message at topic/partition/offset %v/%v/%v: %s = %s\n",
 				m.Topic, m.Partition, m.Offset, string(m.Key), string(m.Value),
@@ -67,6 +70,8 @@ func (c *Consumer) proc(ctx context.Context, number int) {
 		}
 
 		record := domain.RecordFromEvent(event)
+		record.FromQueueDatetime = now
+		record.FromQueueTimestamp = now.Unix()
 
 		if c.enrichWithGeoData && event.IP != "" {
 			nIP := net.ParseIP(event.IP)
@@ -121,12 +126,21 @@ func (c *Consumer) enrichRecordLocation(record *domain.Record, nIP net.IP) {
 	}
 }
 
-func New(reader *kafka.Reader, writer clickhousebuffer.Writer, poolSize int, debug bool) *Consumer {
+func New(
+	reader *kafka.Reader,
+	writer clickhousebuffer.Writer,
+	city, asn *geoip2.Reader,
+	poolSize int,
+	withGeo, debug bool,
+) *Consumer {
 	return &Consumer{
-		reader:   reader,
-		writer:   writer,
-		wg:       &sync.WaitGroup{},
-		poolSize: poolSize,
-		debug:    debug,
+		reader:            reader,
+		writer:            writer,
+		city:              city,
+		asn:               asn,
+		wg:                &sync.WaitGroup{},
+		poolSize:          poolSize,
+		enrichWithGeoData: withGeo,
+		debug:             debug,
 	}
 }

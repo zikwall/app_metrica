@@ -31,6 +31,7 @@ type Internal struct {
 	ChWriteTimeout          time.Duration `yaml:"ch_write_timeout"`
 	MetricTable             string        `yaml:"metric_table"`
 	Debug                   bool          `yaml:"debug"`
+	WithGeo                 bool          `yaml:"with_geo"`
 }
 
 type Bugsnag struct {

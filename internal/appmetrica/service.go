@@ -6,7 +6,6 @@ import (
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/segmentio/kafka-go"
-	"github.com/zikwall/app_metrica/pkg/domain"
 	clickhousebuffer "github.com/zikwall/clickhouse-buffer/v4"
 	"github.com/zikwall/clickhouse-buffer/v4/src/buffer/cxmem"
 	"github.com/zikwall/clickhouse-buffer/v4/src/cx"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/zikwall/app_metrica/config"
 	"github.com/zikwall/app_metrica/pkg/click"
+	"github.com/zikwall/app_metrica/pkg/domain"
 	"github.com/zikwall/app_metrica/pkg/drop"
 	"github.com/zikwall/app_metrica/pkg/geolocation"
 	"github.com/zikwall/app_metrica/pkg/kfk"
@@ -33,6 +33,7 @@ type AppMetrica struct {
 	*drop.Impl
 
 	ReaderCity    *geolocation.Wrapper
+	ReaderASN     *geolocation.Wrapper
 	Clickhouse    *click.Wrapper
 	KafkaReader   *kfk.ReaderWrapper
 	KafkaWriter   *kfk.WriterWrapper
@@ -48,12 +49,17 @@ func New(ctx context.Context, opt *Options) (*AppMetrica, error) {
 		Impl: drop.NewContext(ctx),
 	}
 
-	if opt.MaxMindDatabaseDir != "" {
+	if opt.MaxMindDatabaseDir != "" && opt.Internal.WithGeo {
 		metrica.ReaderCity, err = geolocation.Reader(opt.MaxMindDatabaseDir)
 		if err != nil {
 			return nil, err
 		}
 		metrica.AddDropper(metrica.ReaderCity)
+		metrica.ReaderASN, err = geolocation.ReaderASN(opt.MaxMindDatabaseDir)
+		if err != nil {
+			return nil, err
+		}
+		metrica.AddDropper(metrica.ReaderASN)
 	}
 
 	if opt.Click != nil {
@@ -122,7 +128,7 @@ func New(ctx context.Context, opt *Options) (*AppMetrica, error) {
 		metrica.AddDropper(metrica.KafkaReader)
 	}
 
-	if opt.KafkaWriter != nil {
+	/*if opt.KafkaWriter != nil {
 		metrica.KafkaWriter = kfk.NewWriterWrapper(&kafka.Writer{
 			Addr:            kafka.TCP(opt.KafkaWriter.Brokers...),
 			Topic:           opt.KafkaWriter.Topic,
@@ -137,7 +143,7 @@ func New(ctx context.Context, opt *Options) (*AppMetrica, error) {
 			WriteTimeout:    opt.KafkaWriter.WriteTimeout,
 		})
 		metrica.AddDropper(metrica.KafkaWriter)
-	}
+	}*/
 
 	return metrica, nil
 }

@@ -17,15 +17,41 @@
   "event_json": "",
   "event_datetime": "",
   "event_timestamp": 0,
-  "event_receive_datetime": "",
-  "event_receive_timestamp": "",
   "connection_type": "",
   "operator_name": "",
   "mcc": "",
   "mnc": "",
-  "country_iso_code": "",
-  "city": "",
   "appmetrica_device_id": "",
   "installation_id": "",
-  "session_id": ""
+  "session_id": "",
+
+  "timezone": 5.5,
+
+  "physical_screen_height": 0,
+  "physical_screen_width": 0,
+  "screen_height": 0,
+  "screen_weight": 0,
+  "screen_aspect_ratio": "",
+  "screen_orientation": "",
+
+  "browser": "",
+  "browser_version": "",
+  "cookie_enabled": true,
+  "js_enabled": true,
+  "title": "",
+  "url": "",
+  "referer": "",
+
+  "utm_campaign": "",
+  "utm_content": "",
+  "utm_source": "",
+  "utm_medium": "",
+  "utm_term": "",
+
+  "device_id":  "",
+  "platform": "",
+  "app": "",
+  "version": 0,
+
+  "sdk_version": 0
 }
