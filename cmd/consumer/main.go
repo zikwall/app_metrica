@@ -132,15 +132,7 @@ func Main(ctx *cli.Context) error {
 		}
 	}()
 
-	consul := consumer.New(
-		metrica.KafkaReader.Reader(),
-		metrica.Writer,
-		metrica.ReaderCity.Reader(),
-		metrica.ReaderASN.Reader(),
-		cfg.Internal.ConsumerPerInstanceSize,
-		cfg.Internal.WithGeo,
-		cfg.Internal.Debug,
-	)
+	consul := consumer.New(metrica.Writer, metrica.ReaderCity.Reader(), metrica.ReaderASN.Reader(), cfg)
 	go func() {
 		consul.Run(metrica.Context())
 	}()

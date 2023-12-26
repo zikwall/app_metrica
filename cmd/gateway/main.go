@@ -99,17 +99,6 @@ func Main(ctx *cli.Context) error {
 		log.EnableBugsnagReporter()
 	}
 
-	defer func() {
-		metrica.Shutdown(func(err error) {
-			log.Warning(err)
-		})
-		metrica.Stacktrace()
-	}()
-
-	await, stop := signal.Notifier(func() {
-		log.Info("received a system signal to shutdown AppMetrica, start shutdown process..")
-	})
-
 	app := fiber.New(fiber.Config{
 		Prefork:      cfg.Prefork,
 		ErrorHandler: fiberext.ErrorHandler,
@@ -117,6 +106,18 @@ func Main(ctx *cli.Context) error {
 
 	handler := gateway.NewHandler(cfg)
 	handler.MountRoutes(app)
+
+	defer func() {
+		metrica.Shutdown(func(err error) {
+			log.Warning(err)
+		})
+		<-handler.Done
+		metrica.Stacktrace()
+	}()
+
+	await, stop := signal.Notifier(func() {
+		log.Info("received a system signal to shutdown AppMetrica, start shutdown process..")
+	})
 
 	go func() {
 		handler.Run(metrica.Context())

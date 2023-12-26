@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/segmentio/kafka-go"
 	clickhousebuffer "github.com/zikwall/clickhouse-buffer/v4"
 	"github.com/zikwall/clickhouse-buffer/v4/src/buffer/cxmem"
 	"github.com/zikwall/clickhouse-buffer/v4/src/cx"
@@ -35,8 +34,6 @@ type AppMetrica struct {
 	ReaderCity    *geolocation.Wrapper
 	ReaderASN     *geolocation.Wrapper
 	Clickhouse    *click.Wrapper
-	KafkaReader   *kfk.ReaderWrapper
-	KafkaWriter   *kfk.WriterWrapper
 	Writer        clickhousebuffer.Writer
 	bufferWrapper *click.BufferWrapper
 	clientWrapper *click.ClientWrapper
@@ -110,40 +107,6 @@ func New(ctx context.Context, opt *Options) (*AppMetrica, error) {
 			cxmem.NewBuffer(client.Options().BatchSize()),
 		)
 	}
-
-	if opt.KafkaReader != nil {
-		metrica.KafkaReader = kfk.NewReaderWrapper(kafka.NewReader(kafka.ReaderConfig{
-			Brokers:          opt.KafkaReader.Brokers,
-			GroupID:          opt.KafkaReader.GroupID,
-			GroupTopics:      opt.KafkaReader.GroupTopics,
-			Topic:            opt.KafkaReader.Topic,
-			Partition:        opt.KafkaReader.Partition,
-			QueueCapacity:    opt.KafkaReader.QueueCapacity,
-			MinBytes:         opt.KafkaReader.MinBytes,
-			MaxBytes:         opt.KafkaReader.MaxBytes,
-			MaxWait:          opt.KafkaReader.MaxWait,
-			ReadBatchTimeout: opt.KafkaReader.ReadBatchTimeout,
-			ReadLagInterval:  opt.KafkaReader.ReadLagInterval,
-		}))
-		metrica.AddDropper(metrica.KafkaReader)
-	}
-
-	/*if opt.KafkaWriter != nil {
-		metrica.KafkaWriter = kfk.NewWriterWrapper(&kafka.Writer{
-			Addr:            kafka.TCP(opt.KafkaWriter.Brokers...),
-			Topic:           opt.KafkaWriter.Topic,
-			Balancer:        &kafka.LeastBytes{},
-			MaxAttempts:     opt.KafkaWriter.MaxAttempts,
-			WriteBackoffMin: opt.KafkaWriter.WriteBackoffMin,
-			WriteBackoffMax: opt.KafkaWriter.WriteBackoffMax,
-			BatchSize:       opt.KafkaWriter.BatchSize,
-			BatchBytes:      opt.KafkaWriter.BatchBytes,
-			BatchTimeout:    opt.KafkaWriter.BatchTimeout,
-			ReadTimeout:     opt.KafkaWriter.ReadTimeout,
-			WriteTimeout:    opt.KafkaWriter.WriteTimeout,
-		})
-		metrica.AddDropper(metrica.KafkaWriter)
-	}*/
 
 	return metrica, nil
 }

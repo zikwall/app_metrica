@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/zikwall/app_metrica/pkg/kfk"
 	"gopkg.in/yaml.v3"
 
 	"github.com/zikwall/app_metrica/pkg/click"
+	"github.com/zikwall/app_metrica/pkg/kfk"
 )
 
 type Server struct {
@@ -24,14 +24,15 @@ type Server struct {
 }
 
 type Internal struct {
-	HandlerProcSize         int           `yaml:"handler_proc_size"`
-	ConsumerPerInstanceSize int           `yaml:"consumer_per_instance_size"`
-	BufSize                 uint          `yaml:"buf_size"`
-	BufFlushInterval        uint          `yaml:"buf_flush_interval"`
-	ChWriteTimeout          time.Duration `yaml:"ch_write_timeout"`
-	MetricTable             string        `yaml:"metric_table"`
-	Debug                   bool          `yaml:"debug"`
-	WithGeo                 bool          `yaml:"with_geo"`
+	ProducerPerInstanceSize  int           `yaml:"handler_proc_size"`
+	ConsumerQueueHandlerSize int           `yaml:"consumer_queue_handler_size"`
+	ConsumerPerInstanceSize  int           `yaml:"consumer_per_instance_size"`
+	BufSize                  uint          `yaml:"buf_size"`
+	BufFlushInterval         uint          `yaml:"buf_flush_interval"`
+	ChWriteTimeout           time.Duration `yaml:"ch_write_timeout"`
+	MetricTable              string        `yaml:"metric_table"`
+	Debug                    bool          `yaml:"debug"`
+	WithGeo                  bool          `yaml:"with_geo"`
 }
 
 type Bugsnag struct {

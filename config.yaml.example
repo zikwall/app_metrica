@@ -7,6 +7,7 @@ server:
   internal:
     handler_proc_size: 16
     consumer_per_instance_size: 2
+    consumer_queue_handler_size: 16
     debug: true
     buf_flush_interval: 5000
     buf_size: 5000

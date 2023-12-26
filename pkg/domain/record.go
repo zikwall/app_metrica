@@ -333,6 +333,7 @@ func Columns() []string {
 		"to_queue_timestamp",
 		"from_queue_datetime",
 		"from_queue_timestamp",
+
 		"sdk_version",
 	}
 }

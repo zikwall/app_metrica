@@ -171,3 +171,6 @@ CREATE TABLE appmetrica.events_sharded ON CLUSTER cluster_1
 PARTITION BY toYYYYMM(event_receive_datetime)
 ORDER BY (event_receive_datetime, appmetrica_device_id, ip)
 TTL event_receive_datetime + INTERVAL 16 DAY;
+
+ALTER TABLE appmetrica.events ON CLUSTER cluster_1 ADD COLUMN event_insert_datetime DateTime;
+ALTER TABLE appmetrica.events_sharded ON CLUSTER cluster_1 ADD COLUMN event_insert_datetime DateTime not null default now();
