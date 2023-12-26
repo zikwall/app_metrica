@@ -20,7 +20,3 @@
 ### How work with Kafka
 
 - [See manual](/cluster/kafka/README.md)
-
-### Following manuals
-
-- [x] [Hard manual](https://github.com/zikwall/clickhouse-docs)
