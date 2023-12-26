@@ -11,9 +11,11 @@ import (
 	"github.com/segmentio/kafka-go"
 
 	"github.com/zikwall/app_metrica/config"
+	"github.com/zikwall/app_metrica/pkg/buffer"
 	"github.com/zikwall/app_metrica/pkg/domain"
 	"github.com/zikwall/app_metrica/pkg/fiberext"
 	"github.com/zikwall/app_metrica/pkg/log"
+	"github.com/zikwall/app_metrica/pkg/x"
 )
 
 type packet struct {
@@ -27,6 +29,8 @@ type Handler struct {
 	queue chan packet
 
 	opt *config.Config
+
+	Done chan struct{}
 }
 
 func (h *Handler) MountRoutes(app *fiber.App) {
@@ -53,7 +57,7 @@ func (h *Handler) Event(ctx *fiber.Ctx) error {
 }
 
 func (h *Handler) Run(ctx context.Context) {
-	for i := 1; i <= h.opt.Internal.HandlerProcSize; i++ {
+	for i := 1; i <= h.opt.Internal.ProducerPerInstanceSize; i++ {
 		h.wg.Add(1)
 		go func(number int) {
 			defer h.wg.Done()
@@ -63,11 +67,13 @@ func (h *Handler) Run(ctx context.Context) {
 	}
 
 	h.wg.Wait()
+
+	h.Done <- struct{}{}
 }
 
 func (h *Handler) proc(ctx context.Context, number int) {
-	log.Infof("run producer proc: %d", number)
-	defer log.Infof("stop producer proc: %d", number)
+	log.Infof("run producer proc with circular buffer(64): %d", number)
+	defer log.Infof("stop producer proc with circular buffer(64): %d", number)
 
 	writer := &kafka.Writer{
 		Addr:            kafka.TCP(h.opt.KafkaWriter.Brokers...),
@@ -89,21 +95,78 @@ func (h *Handler) proc(ctx context.Context, number int) {
 		}
 	}()
 
+	circular := buffer.NewCircularBuffer(64)
+	defer func() {
+		if !circular.IsEmpty() {
+			log.Infof("buffer #%d is not empty, flush..", number)
+
+			m, err := circular.DequeueBatch(circular.Size())
+			if err != nil {
+				log.Warningf("producer proc: defer handle dequeue batch: %s", err)
+				return
+			}
+
+			err = writer.WriteMessages(ctx, x.Map[[]byte, kafka.Message](m, func(i []byte, _ int) kafka.Message {
+				return kafka.Message{Value: i}
+			})...)
+
+			if err != nil {
+				log.Warningf("producer proc: defer handle write to kafka: %s", err)
+			}
+		}
+	}()
+
+	flushTicker := time.NewTicker(time.Second * 10)
 	for {
 		select {
 		case <-ctx.Done():
+			flushTicker.Stop()
 			return
 		case b := <-h.queue:
 			next, err := h.handle(b)
 			if err != nil {
-				log.Warningf("producer proc: handle %s", err)
+				log.Warningf("producer proc: handle: %s", err)
 				continue
 			}
 
-			if err = writer.WriteMessages(ctx, kafka.Message{
-				Value: next,
-			}); err != nil {
-				log.Warningf("producer proc: handle %s", err)
+			err = circular.Enqueue(next)
+			if err != nil {
+				log.Warningf("producer proc: handle write to buffer: %s", err)
+			}
+
+			if circular.IsFull() {
+				log.Infof("buffer #%d is not empty, flush..", number)
+
+				m, err := circular.DequeueBatch(circular.Size())
+				if err != nil {
+					log.Warningf("producer proc: dequeue batch from buffer: %s", err)
+					continue
+				}
+
+				err = writer.WriteMessages(ctx, x.Map[[]byte, kafka.Message](m, func(i []byte, _ int) kafka.Message {
+					return kafka.Message{Value: i}
+				})...)
+				if err != nil {
+					log.Warningf("producer proc: handle write to kafka: %s", err)
+				}
+			}
+		case <-flushTicker.C:
+			if !circular.IsEmpty() {
+				log.Infof("buffer #%d is not empty, flush by ticker..", number)
+
+				m, err := circular.DequeueBatch(circular.Size())
+				if err != nil {
+					log.Warningf("producer proc: ticker handle dequeue batch: %s", err)
+					return
+				}
+
+				err = writer.WriteMessages(ctx, x.Map[[]byte, kafka.Message](m, func(i []byte, _ int) kafka.Message {
+					return kafka.Message{Value: i}
+				})...)
+
+				if err != nil {
+					log.Warningf("producer proc: ticker handle write to kafka: %s", err)
+				}
 			}
 		}
 	}
@@ -131,7 +194,8 @@ func (h *Handler) handle(p packet) ([]byte, error) {
 func NewHandler(opt *config.Config) *Handler {
 	return &Handler{
 		wg:    &sync.WaitGroup{},
-		queue: make(chan packet, opt.Internal.HandlerProcSize+10000),
+		queue: make(chan packet, opt.Internal.ProducerPerInstanceSize+10000),
 		opt:   opt,
+		Done:  make(chan struct{}, 1),
 	}
 }

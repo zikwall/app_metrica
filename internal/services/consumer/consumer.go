@@ -12,38 +12,67 @@ import (
 	"github.com/segmentio/kafka-go"
 	clickhousebuffer "github.com/zikwall/clickhouse-buffer/v4"
 
+	"github.com/zikwall/app_metrica/config"
 	"github.com/zikwall/app_metrica/pkg/domain"
 	"github.com/zikwall/app_metrica/pkg/log"
 )
 
 type Consumer struct {
-	reader *kafka.Reader
 	city   *geoip2.Reader
 	asn    *geoip2.Reader
 	writer clickhousebuffer.Writer
 
-	wg *sync.WaitGroup
+	wg  *sync.WaitGroup
+	opt *config.Config
 
-	poolSize          int
-	debug             bool
-	enrichWithGeoData bool
+	queue chan kafka.Message
 }
 
 func (c *Consumer) Run(ctx context.Context) {
-	for i := 1; i <= c.poolSize; i++ {
+	for partition := 0; partition < c.opt.Internal.ConsumerPerInstanceSize; partition++ {
+		c.wg.Add(1)
+		go func(p int) {
+			defer c.wg.Done()
+
+			c.proc(ctx, p)
+		}(partition)
+	}
+
+	for i := 1; i <= c.opt.Internal.ConsumerQueueHandlerSize; i++ {
 		c.wg.Add(1)
 		go func(number int) {
 			defer c.wg.Done()
 
-			c.proc(ctx, number)
+			c.handle(ctx, number)
 		}(i)
 	}
+
 	c.wg.Wait()
+	close(c.queue)
 }
 
-func (c *Consumer) proc(ctx context.Context, number int) {
-	log.Infof("run consumer proc: %d", number)
-	defer log.Infof("stop consumer proc: %d", number)
+func (c *Consumer) proc(ctx context.Context, partition int) {
+	log.Infof("run consumer for partition: %d", partition)
+	defer log.Infof("stop consumer for partition: %d", partition)
+
+	reader := kafka.NewReader(kafka.ReaderConfig{
+		Brokers:     c.opt.KafkaReader.Brokers,
+		GroupID:     c.opt.KafkaReader.GroupID,
+		GroupTopics: c.opt.KafkaReader.GroupTopics,
+		Topic:       c.opt.KafkaReader.Topic,
+		// Partition:        partition,
+		QueueCapacity:    c.opt.KafkaReader.QueueCapacity,
+		MinBytes:         c.opt.KafkaReader.MinBytes,
+		MaxBytes:         c.opt.KafkaReader.MaxBytes,
+		MaxWait:          c.opt.KafkaReader.MaxWait,
+		ReadBatchTimeout: c.opt.KafkaReader.ReadBatchTimeout,
+		ReadLagInterval:  c.opt.KafkaReader.ReadLagInterval,
+	})
+	defer func() {
+		if err := reader.Close(); err != nil {
+			log.Warningf("close kafka reader: %s", err)
+		}
+	}()
 
 	var (
 		err error
@@ -51,36 +80,57 @@ func (c *Consumer) proc(ctx context.Context, number int) {
 	)
 
 	for {
-		m, err = c.reader.ReadMessage(ctx)
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
+		m, err = reader.ReadMessage(ctx)
 		if err != nil {
 			continue
 		}
 
-		now := time.Now()
-		if c.debug {
-			fmt.Printf("message at topic/partition/offset %v/%v/%v: %s = %s\n",
-				m.Topic, m.Partition, m.Offset, string(m.Key), string(m.Value),
+		if c.opt.Internal.Debug {
+			fmt.Printf("cumsumer#(%d) message at topic/partition/offset %v/%v/%v: %s = %s\n",
+				partition, m.Topic, m.Partition, m.Offset, string(m.Key), string(m.Value),
 			)
 		}
 
-		event := &domain.EventExtended{}
-		if err = easyjson.Unmarshal(m.Value, event); err != nil {
-			log.Warningf("consumer proc: unmarshal json %s", err)
-			continue
-		}
+		c.queue <- m
+	}
+}
 
-		record := domain.RecordFromEvent(event)
-		record.FromQueueDatetime = now
-		record.FromQueueTimestamp = now.Unix()
+func (c *Consumer) handle(ctx context.Context, number int) {
+	log.Infof("run consumer message handler: %d", number)
+	defer log.Infof("stop consumer message handler: %d", number)
 
-		if c.enrichWithGeoData && event.IP != "" {
-			nIP := net.ParseIP(event.IP)
-			if nIP != nil {
-				c.enrichRecordLocation(record, nIP)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case m := <-c.queue:
+			now := time.Now()
+
+			event := &domain.EventExtended{}
+			if err := easyjson.Unmarshal(m.Value, event); err != nil {
+				log.Warningf("consumer proc: unmarshal json %s", err)
+				continue
 			}
-		}
 
-		c.writer.TryWriteRow(record)
+			record := domain.RecordFromEvent(event)
+			record.FromQueueDatetime = now
+			record.FromQueueTimestamp = now.Unix()
+
+			if c.opt.Internal.WithGeo && event.IP != "" {
+				nIP := net.ParseIP(event.IP)
+				if nIP != nil {
+					c.enrichRecordLocation(record, nIP)
+				}
+			}
+
+			c.writer.TryWriteRow(record)
+		}
 	}
 }
 
@@ -126,21 +176,13 @@ func (c *Consumer) enrichRecordLocation(record *domain.Record, nIP net.IP) {
 	}
 }
 
-func New(
-	reader *kafka.Reader,
-	writer clickhousebuffer.Writer,
-	city, asn *geoip2.Reader,
-	poolSize int,
-	withGeo, debug bool,
-) *Consumer {
+func New(writer clickhousebuffer.Writer, city, asn *geoip2.Reader, opt *config.Config) *Consumer {
 	return &Consumer{
-		reader:            reader,
-		writer:            writer,
-		city:              city,
-		asn:               asn,
-		wg:                &sync.WaitGroup{},
-		poolSize:          poolSize,
-		enrichWithGeoData: withGeo,
-		debug:             debug,
+		writer: writer,
+		city:   city,
+		asn:    asn,
+		wg:     &sync.WaitGroup{},
+		opt:    opt,
+		queue:  make(chan kafka.Message, 10000),
 	}
 }
