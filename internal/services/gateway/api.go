@@ -98,7 +98,9 @@ func (h *Handler) proc(ctx context.Context, number int) {
 	circular := buffer.NewCircularBuffer(64)
 	defer func() {
 		if !circular.IsEmpty() {
-			log.Infof("buffer #%d is not empty, flush..", number)
+			if h.opt.Internal.Debug {
+				log.Infof("buffer #%d is not empty, flush..", number)
+			}
 
 			m, err := circular.DequeueBatch(circular.Size())
 			if err != nil {
@@ -135,7 +137,9 @@ func (h *Handler) proc(ctx context.Context, number int) {
 			}
 
 			if circular.IsFull() {
-				log.Infof("buffer #%d is not empty, flush..", number)
+				if h.opt.Internal.Debug {
+					log.Infof("buffer #%d is not empty, flush..", number)
+				}
 
 				m, err := circular.DequeueBatch(circular.Size())
 				if err != nil {
@@ -152,7 +156,9 @@ func (h *Handler) proc(ctx context.Context, number int) {
 			}
 		case <-flushTicker.C:
 			if !circular.IsEmpty() {
-				log.Infof("buffer #%d is not empty, flush by ticker..", number)
+				if h.opt.Internal.Debug {
+					log.Infof("buffer #%d is not empty, flush by ticker..", number)
+				}
 
 				m, err := circular.DequeueBatch(circular.Size())
 				if err != nil {
