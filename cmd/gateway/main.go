@@ -115,7 +115,7 @@ func Main(ctx *cli.Context) error {
 		ErrorHandler: fiberext.ErrorHandler,
 	})
 
-	handler := gateway.NewHandler(metrica.KafkaWriter.Writer(), cfg.Internal.HandlerProcSize)
+	handler := gateway.NewHandler(cfg)
 	handler.MountRoutes(app)
 
 	go func() {

@@ -6,6 +6,23 @@ import (
 	"github.com/zikwall/clickhouse-buffer/v4/src/cx"
 )
 
+type ScreenOrientation string
+
+const (
+	OrientationLandscape = "landscape"
+	OrientationPortrait  = "portrait"
+)
+
+func (o ScreenOrientation) UInt8() uint8 {
+	switch o {
+	case OrientationLandscape:
+		return 2
+	case OrientationPortrait:
+		return 1
+	}
+	return 3
+}
+
 type Record struct {
 	ApplicationID      int64     `db:"application_id"`
 	IosIfa             string    `db:"ios_ifa"`
@@ -33,18 +50,55 @@ type Record struct {
 	InstallationID     string    `db:"installation_id"`
 	SessionID          string    `db:"session_id"`
 
-	// from origin
-	CountryIsoCode string `db:"country"`
-	City           string `db:"city"`
-
 	EventReceiveDatetime  time.Time `db:"event_receive_datetime"`
 	EventReceiveTimestamp int64     `db:"event_receive_timestamp"`
 
 	// additional fields
-	IP     string `db:"ip"`
-	Region string `db:"region"`
-	AS     uint32 `db:"as"`
-	ORG    string `db:"org"`
+	IP             string `db:"ip"`
+	Region         string `db:"region"`
+	AS             uint32 `db:"as"`
+	ORG            string `db:"org"`
+	CountryIsoCode string `db:"country"`
+	City           string `db:"city"`
+
+	Timezone float64 `db:"timezone"`
+
+	PhysicalScreenHeight int    `db:"physical_screen_height"`
+	PhysicalScreenWidth  int    `db:"physical_screen_width"`
+	ScreenHeight         int    `db:"screen_height"`
+	ScreenWeight         int    `db:"screen_weight"`
+	ScreenAspectRatio    string `db:"screen_aspect_ratio"`
+	ScreenOrientation    uint8  `db:"screen_orientation"`
+
+	Browser        string `db:"browser"`
+	BrowserVersion string `db:"browser_version"`
+	CookieEnabled  bool   `db:"cookie_enabled"`
+	JsEnabled      bool   `db:"js_enabled"`
+	Title          string `db:"title"`
+	URL            string `db:"url"`
+	Referer        string `db:"referer"`
+
+	UtmCampaign string `db:"utm_campaign"`
+	UtmContent  string `db:"utm_content"`
+	UtmSource   string `db:"utm_source"`
+	UtmMedium   string `db:"utm_medium"`
+	UtmTerm     string `db:"utm_term"`
+
+	UniqID        string `db:"uniq_id"`
+	DeviceID      string `db:"device_id"`
+	Platform      string `db:"platform"`
+	App           string `db:"app"`
+	Version       int    `db:"version"`
+	UserAgent     string `db:"user_agent"`
+	XLHDAgent     string `db:"xlhd_agent"`
+	HardwareOrGUI string `db:"hardware_or_gui"`
+
+	ToQueueDatetime    time.Time `db:"to_queue_datetime"`
+	ToQueueTimestamp   int64     `db:"to_queue_timestamp"`
+	FromQueueDatetime  time.Time `db:"from_queue_datetime"`
+	FromQueueTimestamp int64     `db:"from_queue_timestamp"`
+
+	SdkVersion int `db:"sdk_version"`
 }
 
 func (r *Record) Row() cx.Vector {
@@ -78,15 +132,53 @@ func (r *Record) Row() cx.Vector {
 		r.EventReceiveDatetime,
 		r.EventReceiveTimestamp,
 
-		// from origin
-		r.CountryIsoCode,
-		r.City,
-
 		// additional fields
 		r.IP,
 		r.Region,
 		r.AS,
 		r.ORG,
+		// from origin
+		r.CountryIsoCode,
+		r.City,
+
+		r.Timezone,
+
+		r.PhysicalScreenHeight,
+		r.PhysicalScreenWidth,
+		r.ScreenHeight,
+		r.ScreenWeight,
+		r.ScreenAspectRatio,
+		r.ScreenOrientation,
+
+		r.Browser,
+		r.BrowserVersion,
+		toUint8(r.CookieEnabled),
+		toUint8(r.JsEnabled),
+		r.Title,
+		r.URL,
+		r.Referer,
+
+		r.UtmCampaign,
+		r.UtmContent,
+		r.UtmSource,
+		r.UtmMedium,
+		r.UtmTerm,
+
+		r.UniqID,
+		r.DeviceID,
+		r.Platform,
+		r.App,
+		r.Version,
+		r.UserAgent,
+		r.XLHDAgent,
+		r.HardwareOrGUI,
+
+		r.ToQueueDatetime,
+		r.ToQueueTimestamp,
+		r.FromQueueDatetime,
+		r.FromQueueTimestamp,
+
+		r.SdkVersion,
 	}
 }
 
@@ -121,13 +213,49 @@ func RecordFromEvent(e *EventExtended) *Record {
 		EventReceiveDatetime:  e.EventReceiveDatetime,
 		EventReceiveTimestamp: e.EventTimestamp,
 
+		IP:             e.IP,
+		Region:         "",
+		AS:             0,
+		ORG:            "",
 		CountryIsoCode: "",
 		City:           "",
 
-		IP:     e.IP,
-		Region: "",
-		AS:     0,
-		ORG:    "",
+		Timezone: e.Timezone,
+
+		PhysicalScreenHeight: e.PhysicalScreenHeight,
+		PhysicalScreenWidth:  e.PhysicalScreenWidth,
+		ScreenHeight:         e.ScreenHeight,
+		ScreenWeight:         e.ScreenWeight,
+		ScreenAspectRatio:    e.ScreenAspectRatio,
+		ScreenOrientation:    ScreenOrientation(e.ScreenOrientation).UInt8(),
+
+		Browser:        e.Browser,
+		BrowserVersion: e.BrowserVersion,
+		CookieEnabled:  e.CookieEnabled,
+		JsEnabled:      e.JsEnabled,
+		Title:          e.Title,
+		URL:            e.URL,
+		Referer:        e.Referer,
+
+		UtmCampaign: e.UtmCampaign,
+		UtmMedium:   e.UtmMedium,
+		UtmSource:   e.UtmSource,
+		UtmTerm:     e.UtmTerm,
+		UtmContent:  e.UtmContent,
+
+		UniqID:        e.UniqID,
+		DeviceID:      e.DeviceID,
+		Platform:      e.Platform,
+		App:           e.App,
+		Version:       e.Version,
+		UserAgent:     e.UserAgent,
+		XLHDAgent:     e.XLHDAgent,
+		HardwareOrGUI: e.HardwareOrGUI,
+
+		ToQueueDatetime:  e.ToQueueDatetime,
+		ToQueueTimestamp: e.ToQueueTimestamp,
+
+		SdkVersion: e.SdkVersion,
 	}
 }
 
@@ -162,12 +290,56 @@ func Columns() []string {
 		"event_receive_datetime",
 		"event_receive_timestamp",
 
-		"country_iso_code",
-		"city",
-
 		"ip",
 		"region",
 		"as",
 		"org",
+		"country_iso_code",
+		"city",
+
+		"timezone",
+
+		"physical_screen_height",
+		"physical_screen_width",
+		"screen_height",
+		"screen_weight",
+		"screen_aspect_ratio",
+		"screen_orientation",
+
+		"browser",
+		"browser_version",
+		"cookie_enabled",
+		"js_enabled",
+		"title",
+		"url",
+		"referer",
+
+		"utm_campaign",
+		"utm_content",
+		"utm_source",
+		"utm_medium",
+		"utm_term",
+
+		"uniq_id",
+		"device_id",
+		"platform",
+		"app",
+		"version",
+		"user_agent",
+		"x_lhd_agent",
+		"hardware_or_gui",
+
+		"to_queue_datetime",
+		"to_queue_timestamp",
+		"from_queue_datetime",
+		"from_queue_timestamp",
+		"sdk_version",
 	}
+}
+
+func toUint8(value bool) uint8 {
+	if value {
+		return 1
+	}
+	return 0
 }

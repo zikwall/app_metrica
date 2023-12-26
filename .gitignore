@@ -27,3 +27,4 @@ config-producer.yaml
 config-consumer.yaml
 
 *.mmdb
+!share/GeoLite2-ASN.mmdb
