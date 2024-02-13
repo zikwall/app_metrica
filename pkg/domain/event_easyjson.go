@@ -17,7 +17,85 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain(in *jlexer.Lexer, out *EventExtended) {
+func easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain(in *jlexer.Lexer, out *Events) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		in.Skip()
+		*out = nil
+	} else {
+		in.Delim('[')
+		if *out == nil {
+			if !in.IsDelim(']') {
+				*out = make(Events, 0, 8)
+			} else {
+				*out = Events{}
+			}
+		} else {
+			*out = (*out)[:0]
+		}
+		for !in.IsDelim(']') {
+			var v1 *Event
+			if in.IsNull() {
+				in.Skip()
+				v1 = nil
+			} else {
+				if v1 == nil {
+					v1 = new(Event)
+				}
+				(*v1).UnmarshalEasyJSON(in)
+			}
+			*out = append(*out, v1)
+			in.WantComma()
+		}
+		in.Delim(']')
+	}
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain(out *jwriter.Writer, in Events) {
+	if in == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+		out.RawString("null")
+	} else {
+		out.RawByte('[')
+		for v2, v3 := range in {
+			if v2 > 0 {
+				out.RawByte(',')
+			}
+			if v3 == nil {
+				out.RawString("null")
+			} else {
+				(*v3).MarshalEasyJSON(out)
+			}
+		}
+		out.RawByte(']')
+	}
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v Events) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v Events) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *Events) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *Events) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain(l, v)
+}
+func easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain1(in *jlexer.Lexer, out *EventExtended) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -172,7 +250,7 @@ func easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain(in *jlexer.Lexer,
 		in.Consumed()
 	}
 }
-func easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain(out *jwriter.Writer, in EventExtended) {
+func easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain1(out *jwriter.Writer, in EventExtended) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -482,27 +560,27 @@ func easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain(out *jwriter.Writ
 // MarshalJSON supports json.Marshaler interface
 func (v EventExtended) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain(&w, v)
+	easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain1(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v EventExtended) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain(w, v)
+	easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain1(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *EventExtended) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain(&r, v)
+	easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain1(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *EventExtended) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain(l, v)
+	easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain1(l, v)
 }
-func easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain1(in *jlexer.Lexer, out *Event) {
+func easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain2(in *jlexer.Lexer, out *Event) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -631,7 +709,7 @@ func easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain1(in *jlexer.Lexer
 		in.Consumed()
 	}
 }
-func easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain1(out *jwriter.Writer, in Event) {
+func easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain2(out *jwriter.Writer, in Event) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -886,23 +964,23 @@ func easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain1(out *jwriter.Wri
 // MarshalJSON supports json.Marshaler interface
 func (v Event) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain1(&w, v)
+	easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain2(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Event) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain1(w, v)
+	easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain2(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Event) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain1(&r, v)
+	easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain2(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Event) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain1(l, v)
+	easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain2(l, v)
 }
