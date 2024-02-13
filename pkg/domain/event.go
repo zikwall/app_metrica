@@ -7,6 +7,9 @@ import (
 )
 
 //easyjson:json
+type Events []*Event
+
+//easyjson:json
 type Event struct {
 	ApplicationID        int64         `json:"application_id"`
 	IosIfa               string        `json:"ios_ifa"`

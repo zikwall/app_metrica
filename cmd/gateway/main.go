@@ -8,10 +8,11 @@ import (
 	"github.com/bugsnag/bugsnag-go/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/urfave/cli/v2"
-	"github.com/zikwall/app_metrica/internal/services/gateway"
 
 	"github.com/zikwall/app_metrica/config"
 	"github.com/zikwall/app_metrica/internal/appmetrica"
+	"github.com/zikwall/app_metrica/internal/eventbus"
+	"github.com/zikwall/app_metrica/internal/services/gateway"
 	"github.com/zikwall/app_metrica/pkg/fiberext"
 	"github.com/zikwall/app_metrica/pkg/log"
 	"github.com/zikwall/app_metrica/pkg/signal"
@@ -99,19 +100,13 @@ func Main(ctx *cli.Context) error {
 		log.EnableBugsnagReporter()
 	}
 
-	app := fiber.New(fiber.Config{
-		Prefork:      cfg.Prefork,
-		ErrorHandler: fiberext.ErrorHandler,
-	})
-
-	handler := gateway.NewHandler(cfg)
-	handler.MountRoutes(app)
+	bus := eventbus.NewEventBus(cfg)
 
 	defer func() {
 		metrica.Shutdown(func(err error) {
 			log.Warning(err)
 		})
-		<-handler.Done
+		<-bus.Done
 		metrica.Stacktrace()
 	}()
 
@@ -119,11 +114,20 @@ func Main(ctx *cli.Context) error {
 		log.Info("received a system signal to shutdown AppMetrica, start shutdown process..")
 	})
 
+	// run event bus
 	go func() {
-		handler.Run(metrica.Context())
+		bus.Run(metrica.Context())
 	}()
 
+	// run HTTP server for receive events
 	go func() {
+		app := fiber.New(fiber.Config{
+			Prefork:      cfg.Prefork,
+			ErrorHandler: fiberext.ErrorHandler,
+		})
+		handler := gateway.NewHandler(bus)
+		handler.MountRoutes(app)
+
 		var ln net.Listener
 		if ln, err = signal.Listener(
 			metrica.Context(),
