@@ -1,11 +1,15 @@
 module github.com/zikwall/app_metrica
 
-go 1.20
+go 1.21
+
+toolchain go1.22.1
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.15.0
+	github.com/brianvoe/gofakeit/v6 v6.26.3
 	github.com/bugsnag/bugsnag-go/v2 v2.2.0
 	github.com/gofiber/fiber/v2 v2.51.0
+	github.com/google/uuid v1.4.0
 	github.com/mailru/easyjson v0.7.7
 	github.com/oschwald/geoip2-golang v1.9.0
 	github.com/segmentio/kafka-go v0.4.46
@@ -19,13 +23,11 @@ require (
 	github.com/ClickHouse/ch-go v0.60.0 // indirect
 	github.com/Rican7/retry v0.3.1 // indirect
 	github.com/andybalholm/brotli v1.0.6 // indirect
-	github.com/brianvoe/gofakeit/v6 v6.26.3 // indirect
 	github.com/bugsnag/panicwrap v1.3.4 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-faster/errors v0.7.0 // indirect
-	github.com/google/uuid v1.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/klauspost/compress v1.17.3 // indirect

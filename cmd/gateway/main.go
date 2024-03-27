@@ -7,6 +7,7 @@ import (
 
 	"github.com/bugsnag/bugsnag-go/v2"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/urfave/cli/v2"
 
 	"github.com/zikwall/app_metrica/config"
@@ -125,6 +126,8 @@ func Main(ctx *cli.Context) error {
 			Prefork:      cfg.Prefork,
 			ErrorHandler: fiberext.ErrorHandler,
 		})
+		app.Use(cors.New())
+
 		handler := gateway.NewHandler(bus)
 		handler.MountRoutes(app)
 
