@@ -163,7 +163,7 @@ func handleBytes(e Event) ([]byte, error) {
 		event = &domain.Event{}
 	)
 	if err = easyjson.Unmarshal(e.data, event); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unmarshal json object: %w, %s", err, string(e.data))
 	}
 
 	exEvent := domain.ExtendEvent(event, time.Now(), e.t)
