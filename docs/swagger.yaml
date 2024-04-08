@@ -1,0 +1,201 @@
+basePath: /
+definitions:
+  domain.Event:
+    properties:
+      android_id:
+        type: string
+      app:
+        type: string
+      app_package_name:
+        type: string
+      app_version_name:
+        type: string
+      application_id:
+        type: integer
+      appmetrica_device_id:
+        type: string
+      browser:
+        type: string
+      browser_version:
+        type: string
+      connection_type:
+        type: string
+      cookie_enabled:
+        type: boolean
+      device_id:
+        type: string
+      device_locale:
+        type: string
+      device_manufacturer:
+        type: string
+      device_model:
+        type: string
+      device_type:
+        type: string
+      event_datetime:
+        $ref: '#/definitions/domain.EventDatetime'
+      event_json:
+        type: string
+      event_name:
+        type: string
+      event_timestamp:
+        type: integer
+      google_aid:
+        type: string
+      installation_id:
+        type: string
+      ios_ifa:
+        type: string
+      ios_ifv:
+        type: string
+      js_enabled:
+        type: boolean
+      mcc:
+        type: string
+      mnc:
+        type: string
+      operator_name:
+        type: string
+      os_name:
+        type: string
+      os_version:
+        type: string
+      physical_screen_height:
+        type: integer
+      physical_screen_width:
+        type: integer
+      platform:
+        type: string
+      profile_id:
+        type: string
+      referer:
+        type: string
+      screen_aspect_ratio:
+        type: string
+      screen_height:
+        type: integer
+      screen_orientation:
+        type: string
+      screen_weight:
+        type: integer
+      sdk_version:
+        type: integer
+      session_id:
+        type: string
+      timezone:
+        type: number
+      title:
+        type: string
+      url:
+        type: string
+      utm_campaign:
+        type: string
+      utm_content:
+        type: string
+      utm_medium:
+        type: string
+      utm_source:
+        type: string
+      utm_term:
+        type: string
+      version:
+        type: integer
+    type: object
+  domain.EventDatetime:
+    properties:
+      time.Time:
+        type: string
+    type: object
+  gateway.ErrorMessage:
+    properties:
+      error:
+        type: string
+      request_body:
+        type: string
+    type: object
+host: lm.limehd.tv
+info:
+  contact:
+    email: a.kapitonov@limehd.tv
+    name: API Support
+  description: Under construct
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: OwnMetrics aka AppMetrica gateway service
+  version: "1.0"
+paths:
+  /internal/api/v1/event:
+    post:
+      consumes:
+      - application/json
+      description: Method receive message and send to queue
+      parameters:
+      - description: request event
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Event'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: no content
+          schema:
+            type: string
+      summary: Receive event fields
+      tags:
+      - Events
+  /internal/api/v1/event-batch:
+    post:
+      consumes:
+      - application/json
+      description: Method receive messages and send to queue
+      parameters:
+      - description: request events
+        in: body
+        name: data
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/domain.Event'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: no content
+          schema:
+            type: string
+      summary: Receive event fields with batch mode
+      tags:
+      - Events
+  /internal/api/v1/event-debug:
+    post:
+      consumes:
+      - application/json
+      description: Method check event message is valid or not
+      parameters:
+      - description: request debug event
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Event'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/gateway.ErrorMessage'
+      summary: Debug event fields
+      tags:
+      - Events
+swagger: "2.0"
