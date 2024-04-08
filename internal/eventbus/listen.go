@@ -2,6 +2,7 @@ package eventbus
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -28,6 +29,17 @@ func (e *EventBus) newKafkaWriter() *kafka.Writer {
 		ReadTimeout:     e.opt.KafkaWriter.ReadTimeout,
 		WriteTimeout:    e.opt.KafkaWriter.WriteTimeout,
 	}
+}
+
+func (e *EventBus) DebugMessage(ev Event) error {
+	var (
+		err   error
+		event = &domain.Event{}
+	)
+	if err = json.Unmarshal(ev.data, event); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (e *EventBus) listen(ctx context.Context, number int) {
