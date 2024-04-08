@@ -20,6 +20,7 @@ import (
 	"github.com/zikwall/app_metrica/internal/services/gateway"
 	"github.com/zikwall/app_metrica/pkg/fiberext"
 	"github.com/zikwall/app_metrica/pkg/log"
+	"github.com/zikwall/app_metrica/pkg/prometheus"
 	"github.com/zikwall/app_metrica/pkg/signal"
 )
 
@@ -134,6 +135,7 @@ func Main(ctx *cli.Context) error {
 		app.Use(cors.New())
 
 		app.Get("/swagger/*", swagger.HandlerDefault)
+		app.Get("/metrics", prometheus.FastHTTPAdapter())
 
 		handler := gateway.NewHandler(bus, metro)
 		handler.MountRoutes(app)
