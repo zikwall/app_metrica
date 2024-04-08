@@ -5,8 +5,6 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/swagger"
-
 	"github.com/zikwall/app_metrica/internal/eventbus"
 	"github.com/zikwall/app_metrica/pkg/fiberext"
 )
@@ -33,8 +31,6 @@ type Handler struct {
 //	@host			lm.limehd.tv
 //	@BasePath		/
 func (h *Handler) MountRoutes(app *fiber.App) {
-	app.Get("/swagger/*", swagger.HandlerDefault)
-
 	internalV1 := app.Group("/internal/api/v1")
 	internalV1.Post("/event", h.event)
 	internalV1.Post("/event-batch", h.eventBatch)

@@ -8,7 +8,10 @@ import (
 	"github.com/bugsnag/bugsnag-go/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/swagger"
 	"github.com/urfave/cli/v2"
+
+	_ "github.com/zikwall/app_metrica/docs"
 
 	"github.com/zikwall/app_metrica/config"
 	"github.com/zikwall/app_metrica/internal/appmetrica"
@@ -127,6 +130,8 @@ func Main(ctx *cli.Context) error {
 			ErrorHandler: fiberext.ErrorHandler,
 		})
 		app.Use(cors.New())
+
+		app.Get("/swagger/*", swagger.HandlerDefault)
 
 		handler := gateway.NewHandler(bus)
 		handler.MountRoutes(app)
