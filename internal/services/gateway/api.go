@@ -5,7 +5,9 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+
 	"github.com/zikwall/app_metrica/internal/eventbus"
+	"github.com/zikwall/app_metrica/internal/metrics"
 	"github.com/zikwall/app_metrica/pkg/fiberext"
 )
 
@@ -15,7 +17,8 @@ type EventBus interface {
 }
 
 type Handler struct {
-	bus EventBus
+	bus     EventBus
+	metrics *metrics.Metrics
 }
 
 // MountRoutes godoc
@@ -80,6 +83,8 @@ func (h *Handler) eventDebug(ctx *fiber.Ctx) error {
 // @Success		201	{object}	string	"no content"
 // @Router			/internal/api/v1/event [post]
 func (h *Handler) event(ctx *fiber.Ctx) error {
+	start := time.Now()
+
 	// Returned value is only valid within the handler. Do not store any references.
 	// Make copies or use the Immutable setting instead.
 	body := ctx.Body()
@@ -92,6 +97,10 @@ func (h *Handler) event(ctx *fiber.Ctx) error {
 	h.bus.SendEvent(
 		eventbus.NewEvent(dst, fiberext.RealIP(ctx), time.Now(), eventbus.EventTypeInline),
 	)
+
+	h.metrics.IncRequests(false)
+	h.metrics.RequestsDuration(start, false)
+
 	return ctx.SendStatus(http.StatusNoContent)
 }
 
@@ -104,6 +113,8 @@ func (h *Handler) event(ctx *fiber.Ctx) error {
 // @Success		201	{object}	string	"no content"
 // @Router			/internal/api/v1/event-batch [post]
 func (h *Handler) eventBatch(ctx *fiber.Ctx) error {
+	start := time.Now()
+
 	// Returned value is only valid within the handler. Do not store any references.
 	// Make copies or use the Immutable setting instead.
 	body := ctx.Body()
@@ -116,11 +127,16 @@ func (h *Handler) eventBatch(ctx *fiber.Ctx) error {
 	h.bus.SendEvent(
 		eventbus.NewEvent(dst, fiberext.RealIP(ctx), time.Now(), eventbus.EventTypeBatch),
 	)
+
+	h.metrics.IncRequests(true)
+	h.metrics.RequestsDuration(start, true)
+
 	return ctx.SendStatus(http.StatusNoContent)
 }
 
-func NewHandler(bus EventBus) *Handler {
+func NewHandler(bus EventBus, metrics *metrics.Metrics) *Handler {
 	return &Handler{
-		bus: bus,
+		bus:     bus,
+		metrics: metrics,
 	}
 }

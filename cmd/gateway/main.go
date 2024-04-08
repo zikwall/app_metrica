@@ -16,6 +16,7 @@ import (
 	"github.com/zikwall/app_metrica/config"
 	"github.com/zikwall/app_metrica/internal/appmetrica"
 	"github.com/zikwall/app_metrica/internal/eventbus"
+	"github.com/zikwall/app_metrica/internal/metrics"
 	"github.com/zikwall/app_metrica/internal/services/gateway"
 	"github.com/zikwall/app_metrica/pkg/fiberext"
 	"github.com/zikwall/app_metrica/pkg/log"
@@ -104,7 +105,8 @@ func Main(ctx *cli.Context) error {
 		log.EnableBugsnagReporter()
 	}
 
-	bus := eventbus.NewEventBus(cfg)
+	metro := metrics.New()
+	bus := eventbus.NewEventBus(cfg, metro)
 
 	defer func() {
 		metrica.Shutdown(func(err error) {
@@ -133,7 +135,7 @@ func Main(ctx *cli.Context) error {
 
 		app.Get("/swagger/*", swagger.HandlerDefault)
 
-		handler := gateway.NewHandler(bus)
+		handler := gateway.NewHandler(bus, metro)
 		handler.MountRoutes(app)
 
 		var ln net.Listener

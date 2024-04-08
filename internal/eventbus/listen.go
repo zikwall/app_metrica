@@ -58,13 +58,22 @@ func (e *EventBus) listen(ctx context.Context, number int) {
 
 	// flushBuffer is a closure that is responsible for sending the filled circular buffer data to Kafka.
 	flushBuffer := func() error {
+		var (
+			err error
+			m   [][]byte
+		)
+
+		defer func() {
+			e.metrics.IncQueue(len(m), false, err)
+		}()
+
 		if e.opt.Internal.Debug {
 			log.Infof("buffer #%d is not empty, flush..", number)
 		}
 
 		// Add code here for sending the buffer data to Kafka
 		// Return any potential error that occurs during the process
-		m, err := circular.DequeueBatch(circular.Size())
+		m, err = circular.DequeueBatch(circular.Size())
 		if err != nil {
 			return fmt.Errorf("dequeue batch from buffer: %w", err)
 		}
@@ -73,17 +82,27 @@ func (e *EventBus) listen(ctx context.Context, number int) {
 		if err != nil {
 			return fmt.Errorf("handle write to kafka: %w", err)
 		}
+
 		return nil
 	}
 
 	// handleVoidBuffer is a closure that is called when the circular buffer is empty.
 	handleVoidBuffer := func() error {
 		if !circular.IsEmpty() {
+			var (
+				err error
+				m   [][]byte
+			)
+
+			defer func() {
+				e.metrics.IncQueue(len(m), true, err)
+			}()
+
 			if e.opt.Internal.Debug {
 				log.Infof("buffer #%d is not empty, flush by ticker..", number)
 			}
 
-			m, err := circular.DequeueBatch(circular.Size())
+			m, err = circular.DequeueBatch(circular.Size())
 			if err != nil {
 				return fmt.Errorf("ticker handle dequeue batch: %w", err)
 			}
@@ -104,7 +123,17 @@ func (e *EventBus) listen(ctx context.Context, number int) {
 	}()
 
 	handleEvent := func(event Event) error {
-		bytes, err := handleBytes(event)
+		var (
+			err   error
+			bytes []byte
+			start = time.Now()
+		)
+
+		defer func() {
+			e.metrics.QueueDuration(start, 1, err)
+		}()
+
+		bytes, err = handleBytes(event)
 		if err != nil {
 			return fmt.Errorf("handle: %w", err)
 		}
@@ -124,7 +153,17 @@ func (e *EventBus) listen(ctx context.Context, number int) {
 	}
 
 	handleEvents := func(event Event) error {
-		bytes, err := handleMultipleBytes(event)
+		var (
+			err   error
+			bytes [][]byte
+			start = time.Now()
+		)
+
+		defer func() {
+			e.metrics.QueueDuration(start, len(bytes), err)
+		}()
+
+		bytes, err = handleMultipleBytes(event)
 		if err != nil {
 			return fmt.Errorf("handle: %w", err)
 		}
