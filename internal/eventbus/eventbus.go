@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/zikwall/app_metrica/config"
+	"github.com/zikwall/app_metrica/internal/metrics"
 )
 
 type EventType uint8
@@ -33,20 +34,22 @@ func NewEvent(data []byte, ip string, received time.Time, evt EventType) Event {
 }
 
 type EventBus struct {
-	wg  *sync.WaitGroup
-	opt *config.Config
+	wg      *sync.WaitGroup
+	opt     *config.Config
+	metrics *metrics.Metrics
 
 	events chan Event
 
 	Done chan struct{}
 }
 
-func NewEventBus(opt *config.Config) *EventBus {
+func NewEventBus(opt *config.Config, metrics *metrics.Metrics) *EventBus {
 	bus := &EventBus{
-		wg:     &sync.WaitGroup{},
-		opt:    opt,
-		events: make(chan Event, opt.Internal.ProducerPerInstanceSize+10000),
-		Done:   make(chan struct{}, 1),
+		wg:      &sync.WaitGroup{},
+		opt:     opt,
+		metrics: metrics,
+		events:  make(chan Event, opt.Internal.ProducerPerInstanceSize+10000),
+		Done:    make(chan struct{}, 1),
 	}
 	return bus
 }

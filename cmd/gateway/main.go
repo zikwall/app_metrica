@@ -8,14 +8,19 @@ import (
 	"github.com/bugsnag/bugsnag-go/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/swagger"
 	"github.com/urfave/cli/v2"
+
+	_ "github.com/zikwall/app_metrica/docs"
 
 	"github.com/zikwall/app_metrica/config"
 	"github.com/zikwall/app_metrica/internal/appmetrica"
 	"github.com/zikwall/app_metrica/internal/eventbus"
+	"github.com/zikwall/app_metrica/internal/metrics"
 	"github.com/zikwall/app_metrica/internal/services/gateway"
 	"github.com/zikwall/app_metrica/pkg/fiberext"
 	"github.com/zikwall/app_metrica/pkg/log"
+	"github.com/zikwall/app_metrica/pkg/prometheus"
 	"github.com/zikwall/app_metrica/pkg/signal"
 )
 
@@ -101,7 +106,8 @@ func Main(ctx *cli.Context) error {
 		log.EnableBugsnagReporter()
 	}
 
-	bus := eventbus.NewEventBus(cfg)
+	metro := metrics.New()
+	bus := eventbus.NewEventBus(cfg, metro)
 
 	defer func() {
 		metrica.Shutdown(func(err error) {
@@ -128,7 +134,10 @@ func Main(ctx *cli.Context) error {
 		})
 		app.Use(cors.New())
 
-		handler := gateway.NewHandler(bus)
+		app.Get("/swagger/*", swagger.HandlerDefault)
+		app.Get("/metrics", prometheus.FastHTTPAdapter())
+
+		handler := gateway.NewHandler(bus, metro)
 		handler.MountRoutes(app)
 
 		var ln net.Listener
