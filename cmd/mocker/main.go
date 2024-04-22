@@ -97,12 +97,14 @@ func main() {
 			&cli.StringSliceFlag{
 				Name:     "addresses",
 				Usage:    "URL address",
-				Required: true,
+				Required: false,
+				Value:    cli.NewStringSlice("http://localhost:3000/internal/api/v1/event"),
 			},
 			&cli.IntFlag{
 				Name:     "count",
 				Usage:    "is the total number of requests to make.",
-				Required: true,
+				Required: false,
+				Value:    1,
 			},
 			&cli.IntFlag{
 				Name:     "parallelism",

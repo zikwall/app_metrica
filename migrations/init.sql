@@ -1,4 +1,6 @@
-CREATE TABLE appmetrica.events ON CLUSTER cluster_1
+CREATE DATABASE IF NOT EXISTS appmetrica ON CLUSTER cluster_1;
+
+CREATE TABLE IF NOT EXISTS appmetrica.events ON CLUSTER cluster_1
 (
     `application_id` Int64,
     `ios_ifa` String,
@@ -84,7 +86,7 @@ CREATE TABLE appmetrica.events ON CLUSTER cluster_1
 )
 ENGINE = Distributed('cluster_1', 'appmetrica', 'events_sharded', rand());
 
-CREATE TABLE appmetrica.events_sharded ON CLUSTER cluster_1
+CREATE TABLE IF NOT EXISTS appmetrica.events_sharded ON CLUSTER cluster_1
 (
     `application_id` Int64,
     `ios_ifa` String,
@@ -173,4 +175,4 @@ ORDER BY (event_receive_datetime, appmetrica_device_id, ip)
 TTL event_receive_datetime + INTERVAL 16 DAY;
 
 ALTER TABLE appmetrica.events ON CLUSTER cluster_1 ADD COLUMN event_insert_datetime DateTime;
-ALTER TABLE appmetrica.events_sharded ON CLUSTER cluster_1 ADD COLUMN event_insert_datetime DateTime not null default now();
+ALTER TABLE appmetrica.events_sharded ON CLUSTER cluster_1 ADD COLUMN event_insert_datetime DateTime default now();
