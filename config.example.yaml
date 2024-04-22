@@ -1,14 +1,14 @@
 server:
   bugsnag:
-    api_key: xxxxxxxx
-    release_stage: production
+    api_key:
+    release_stage:
   max_mind_database_dir: "./share"
   prefork: false
   internal:
     handler_proc_size: 16
     consumer_per_instance_size: 2
     consumer_queue_handler_size: 16
-    debug: true
+    debug: false
     buf_flush_interval: 5000
     buf_size: 5000
     ch_write_timeout: 0m15s
@@ -16,10 +16,10 @@ server:
     with_geo: true
   clickhouse:
     hosts:
-      - xxxxxx:9000
-    username: xxxx
-    database: xxxxxx
-    password: "123456"
+      - localhost:9001
+    username:
+    database:
+    password:
     max_execution_time: 30
     max_open_conns: 20
     max_idle_conns: 15

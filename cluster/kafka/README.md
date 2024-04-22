@@ -84,3 +84,17 @@ docker exec -it clickhouse-kafka \
 - [x] Show full logs fro Kafka run: `$ docker logs -f clickhouse-kafka`
 - [x] [Kafkacat](https://github.com/edenhill/kafkacat)
 - [x] [Kafdrop](https://github.com/obsidiandynamics/kafdrop)
+
+### NEW
+
+for dev
+
+```bash
+docker compose --env-file .env up -d
+```
+
+```bash
+chmod -R 777 /shared 
+```
+
+after this run `docker compose up` instruction again

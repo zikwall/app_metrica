@@ -38,7 +38,7 @@ func (c *Consumer) Run(ctx context.Context) {
 		}(partition)
 	}
 
-	for i := 1; i <= c.opt.Internal.ConsumerQueueHandlerSize; i++ {
+	for i := 1; i <= c.opt.Server.Internal.ConsumerQueueHandlerSize; i++ {
 		c.wg.Add(1)
 		go func(number int) {
 			defer c.wg.Done()

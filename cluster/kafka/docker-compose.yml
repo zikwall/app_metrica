@@ -29,7 +29,7 @@ services:
 
     volumes:
       # chmod -R g+rwX
-      - /home/master/shared/clusters/kafka/kafka_0_data:/bitnami/kafka
+      - /shared/kafka/kafka_0_data:/bitnami/kafka
 
   kafka-1:
     image: bitnami/kafka:3.6
@@ -58,7 +58,7 @@ services:
       - KAFKA_ADVERTISED_HOST_NAME=${KAFKA_HOST}
     volumes:
       # chmod -R g+rwX
-      - /home/master/shared/clusters/kafka/kafka_1_data:/bitnami/kafka
+      - /shared/kafka/kafka_1_data:/bitnami/kafka
 
   kafka-2:
     image: bitnami/kafka:3.6
@@ -86,7 +86,7 @@ services:
       # Local
       - KAFKA_ADVERTISED_HOST_NAME=${KAFKA_HOST}
     volumes:
-      - /home/master/shared/clusters/kafka/kafka_2_data:/bitnami/kafka
+      - /shared/kafka/kafka_2_data:/bitnami/kafka
 
   kafdrop:
     image: obsidiandynamics/kafdrop:latest
@@ -107,4 +107,4 @@ services:
       - KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS=kafka-0:9092
       - KAFKA_CLUSTERS_0_NAME=local
     volumes:
-      - /home/master/shared/clusters/kui/config.yml:/etc/kafkaui/dynamic_config.yaml
+      - /shared/kui/config.yml:/etc/kafkaui/dynamic_config.yaml

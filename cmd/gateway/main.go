@@ -85,6 +85,7 @@ func Main(ctx *cli.Context) error {
 		Click:              cfg.Clickhouse,
 		KafkaWriter:        cfg.KafkaWriter,
 		MaxMindDatabaseDir: cfg.MaxMindDatabaseDir,
+		Internal:           cfg.Internal,
 	})
 	if err != nil {
 		return err

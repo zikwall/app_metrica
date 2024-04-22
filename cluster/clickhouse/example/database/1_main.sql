@@ -1,4 +1,4 @@
-CREATE TABLE main
+CREATE TABLE IF NOT EXISTS main
 (
     `user_id`    UInt32,
     `app`        String,
