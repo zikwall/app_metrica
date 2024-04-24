@@ -38,21 +38,11 @@ func (w *Wrapper) DropMsg() string {
 	return fmt.Sprintf("close %s reader", w.name)
 }
 
-func Reader(basePath string) (*Wrapper, error) {
-	path := filepath.Join(basePath, "GeoIP2-City.mmdb")
-	abs, _ := filepath.Abs(path)
-
-	geoReaderCity, err := geoip2.Open(abs)
+func Reader(path string) (*Wrapper, error) {
+	abs, err := filepath.Abs(path)
 	if err != nil {
 		return nil, err
 	}
-
-	return NewWrapper(geoReaderCity, "city"), nil
-}
-
-func ReaderASN(basePath string) (*Wrapper, error) {
-	path := filepath.Join(basePath, "GeoLite2-ASN.mmdb")
-	abs, _ := filepath.Abs(path)
 
 	geoReaderCity, err := geoip2.Open(abs)
 	if err != nil {

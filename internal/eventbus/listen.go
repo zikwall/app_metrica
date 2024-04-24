@@ -54,7 +54,7 @@ func (e *EventBus) listen(ctx context.Context, number int) {
 		}
 	}()
 
-	circular := buffer.NewCircularBuffer(64)
+	circular := buffer.NewCircularBuffer(e.opt.Internal.CircularBufferSize)
 
 	// flushBuffer is a closure that is responsible for sending the filled circular buffer data to Kafka.
 	flushBuffer := func() error {
