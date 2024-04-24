@@ -75,16 +75,16 @@ func Main(ctx *cli.Context) error {
 	}
 
 	metrica, err := appmetrica.New(appContext, &appmetrica.Options{
-		Click:              cfg.Clickhouse,
-		KafkaReader:        cfg.KafkaReader,
-		MaxMindDatabaseDir: cfg.MaxMindDatabaseDir,
-		Internal:           cfg.Internal,
+		Click:       cfg.Clickhouse,
+		KafkaReader: cfg.KafkaReader,
+		MaxMind:     cfg.MaxMind,
+		Internal:    cfg.Internal,
 	})
 	if err != nil {
 		return err
 	}
 
-	if cfg.Bugsnag.Maybe() {
+	if !cfg.Bugsnag.IsEmpty() {
 		bugsnag.Configure(bugsnag.Configuration{
 			// Your Bugsnag project API key, required unless set as environment
 			// variable $BUGSNAG_API_KEY

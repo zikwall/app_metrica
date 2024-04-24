@@ -16,6 +16,7 @@ import (
 	"github.com/zikwall/app_metrica/pkg/drop"
 	"github.com/zikwall/app_metrica/pkg/geolocation"
 	"github.com/zikwall/app_metrica/pkg/kfk"
+	"github.com/zikwall/app_metrica/pkg/xerror"
 )
 
 type Options struct {
@@ -23,8 +24,7 @@ type Options struct {
 	KafkaReader *kfk.ReaderOpt
 	KafkaWriter *kfk.WriterOpt
 
-	MaxMindDatabaseDir string
-
+	MaxMind  config.MaxMind
 	Internal config.Internal
 }
 
@@ -46,17 +46,19 @@ func New(ctx context.Context, opt *Options) (*AppMetrica, error) {
 		Impl: drop.NewContext(ctx),
 	}
 
-	if opt.MaxMindDatabaseDir != "" && opt.Internal.WithGeo {
-		metrica.ReaderCity, err = geolocation.Reader(opt.MaxMindDatabaseDir)
+	if !opt.MaxMind.IsEmpty() && opt.Internal.WithGeo {
+		metrica.ReaderCity, err = geolocation.Reader(opt.MaxMind.CityPath)
 		if err != nil {
 			return nil, err
 		}
 		metrica.AddDropper(metrica.ReaderCity)
-		metrica.ReaderASN, err = geolocation.ReaderASN(opt.MaxMindDatabaseDir)
+		metrica.ReaderASN, err = geolocation.Reader(opt.MaxMind.ASNPath)
 		if err != nil {
 			return nil, err
 		}
 		metrica.AddDropper(metrica.ReaderASN)
+	} else if opt.Internal.WithGeo {
+		return nil, xerror.ErrMaxMindWithGeo
 	}
 
 	if opt.Click != nil {

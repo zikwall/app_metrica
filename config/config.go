@@ -12,15 +12,15 @@ import (
 )
 
 type Server struct {
-	Bugsnag            Bugsnag `yaml:"bugsnag"`
-	MaxMindDatabaseDir string  `yaml:"max_mind_database_dir"`
+	Bugsnag  `yaml:"bugsnag"`
+	MaxMind  `yaml:"max_mind"`
+	Internal `yaml:"internal"`
 
 	Clickhouse  *click.Opt     `yaml:"clickhouse"`
 	KafkaReader *kfk.ReaderOpt `yaml:"kafka_reader"`
 	KafkaWriter *kfk.WriterOpt `yaml:"kafka_writer"`
 
-	Prefork  bool     `yaml:"prefork"`
-	Internal Internal `yaml:"internal"`
+	Prefork bool `yaml:"prefork"`
 }
 
 type Internal struct {
@@ -29,10 +29,20 @@ type Internal struct {
 	ConsumerPerInstanceSize  int           `yaml:"consumer_per_instance_size"`
 	BufSize                  uint          `yaml:"buf_size"`
 	BufFlushInterval         uint          `yaml:"buf_flush_interval"`
+	CircularBufferSize       int           `yaml:"circular_buffer_size"`
 	ChWriteTimeout           time.Duration `yaml:"ch_write_timeout"`
 	MetricTable              string        `yaml:"metric_table"`
 	Debug                    bool          `yaml:"debug"`
 	WithGeo                  bool          `yaml:"with_geo"`
+}
+
+type MaxMind struct {
+	CityPath string `yaml:"city_path"`
+	ASNPath  string `yaml:"asn_path"`
+}
+
+func (m *MaxMind) IsEmpty() bool {
+	return m.ASNPath == "" || m.CityPath == ""
 }
 
 type Bugsnag struct {
@@ -40,8 +50,8 @@ type Bugsnag struct {
 	ReleaseStage string `yaml:"release_stage"`
 }
 
-func (b *Bugsnag) Maybe() bool {
-	return b.APIKey != "" && b.ReleaseStage != ""
+func (b *Bugsnag) IsEmpty() bool {
+	return b.APIKey == "" || b.ReleaseStage == ""
 }
 
 type Config struct {
