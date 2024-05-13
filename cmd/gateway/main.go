@@ -24,6 +24,19 @@ import (
 	"github.com/zikwall/app_metrica/pkg/signal"
 )
 
+// @title           OwnMetrics aka AppMetrica gateway service
+// @version         1.0
+// @description     Under construct
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   API Support
+// @contact.email  a.kapitonov@limehd.tv
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      lm.limehd.tv
+// @BasePath  /
 func main() {
 	application := cli.App{
 		Flags: []cli.Flag{

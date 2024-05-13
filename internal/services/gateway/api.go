@@ -46,13 +46,20 @@ type ErrorMessage struct {
 	RequestBody string `json:"request_body"`
 }
 
+type DebugMessage struct {
+	IP            string
+	IPs           []string
+	XRealIP       string
+	XForwardedFor string
+}
+
 // @Summary		Debug event fields
 // @Description	Method check event message is valid or not
 // @Tags			Events
 // @Accept			json
 // @Param			data	body	domain.Event	true	"request debug event"
 // @Produce		json
-// @Success		200	{object}	string	"ok"
+// @Success		202	{object}	DebugMessage	"ok"
 // @Failure		422	{object}	ErrorMessage
 // @Router			/internal/api/v1/event-debug [post]
 func (h *Handler) eventDebug(ctx *fiber.Ctx) error {
@@ -71,7 +78,12 @@ func (h *Handler) eventDebug(ctx *fiber.Ctx) error {
 			RequestBody: string(body),
 		})
 	}
-	return ctx.SendStatus(http.StatusAccepted)
+	return ctx.Status(http.StatusAccepted).JSON(DebugMessage{
+		IP:            ctx.IP(),
+		IPs:           ctx.IPs(),
+		XRealIP:       ctx.Get("X-Real-IP"),
+		XForwardedFor: ctx.Get("X-Forwarded-For"),
+	})
 }
 
 // @Summary		Receive event fields

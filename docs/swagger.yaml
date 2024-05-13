@@ -114,6 +114,19 @@ definitions:
       time.Time:
         type: string
     type: object
+  gateway.DebugMessage:
+    properties:
+      ip:
+        type: string
+      ips:
+        items:
+          type: string
+        type: array
+      xforwardedFor:
+        type: string
+      xrealIP:
+        type: string
+    type: object
   gateway.ErrorMessage:
     properties:
       error:
@@ -195,10 +208,10 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "202":
           description: ok
           schema:
-            type: string
+            $ref: '#/definitions/gateway.DebugMessage'
         "422":
           description: Unprocessable Entity
           schema:
