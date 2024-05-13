@@ -199,6 +199,9 @@ const docTemplate = `{
                 "google_aid": {
                     "type": "string"
                 },
+                "hardware_or_gui": {
+                    "type": "string"
+                },
                 "installation_id": {
                     "type": "string"
                 },
@@ -265,7 +268,13 @@ const docTemplate = `{
                 "title": {
                     "type": "string"
                 },
+                "uniq_id": {
+                    "type": "string"
+                },
                 "url": {
+                    "type": "string"
+                },
+                "user_agent": {
                     "type": "string"
                 },
                 "utm_campaign": {
@@ -285,6 +294,9 @@ const docTemplate = `{
                 },
                 "version": {
                     "type": "integer"
+                },
+                "xlhd_agent": {
+                    "type": "string"
                 }
             }
         },

@@ -49,6 +49,9 @@ type Payload struct {
 	AppmetricaDeviceID    string `json:"appmetrica_device_id"`
 	InstallationID        string `json:"installation_id"`
 	SessionID             string `json:"session_id"`
+	XLHDAgent             string `json:"xlhd_agent"`
+	UserAgent             string `json:"user_agent"`
+	HardwareOrGUI         string `json:"hardware_or_gui"`
 }
 
 func (p *Payload) Bytes() ([]byte, error) {
@@ -272,6 +275,9 @@ func (w *worker) runWorker(ctx context.Context, client *http.Client, n int) {
 				AppmetricaDeviceID:    w.randomMachine.rndAppmetricaDeviceID(),
 				InstallationID:        w.randomMachine.rndInstallationID(),
 				SessionID:             w.randomMachine.rndSessionID(),
+				XLHDAgent:             "lhd header",
+				UserAgent:             "user agent",
+				HardwareOrGUI:         "idk",
 			}); err != nil {
 				log.Warningf("http request: %s", err)
 				atomic.AddInt64(&w.completedWithErrors, 1)

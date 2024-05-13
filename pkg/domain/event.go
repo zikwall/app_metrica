@@ -60,6 +60,10 @@ type Event struct {
 	App                  string        `json:"app"`
 	Version              int           `json:"version"`
 	SdkVersion           int           `json:"sdk_version"`
+	UserAgent            string        `json:"user_agent"`
+	XLHDAgent            string        `json:"xlhd_agent"`
+	HardwareOrGUI        string        `json:"hardware_or_gui"`
+	UniqID               string        `json:"uniq_id"`
 }
 
 //easyjson:json
@@ -196,14 +200,14 @@ func ExtendEvent(e *Event, now time.Time, receive time.Time) *EventExtended {
 		UtmMedium:   e.UtmMedium,
 		UtmTerm:     e.UtmTerm,
 
-		UniqID:        e.UtmMedium,
+		UniqID:        e.UniqID,
 		DeviceID:      e.DeviceID,
 		Platform:      e.Platform,
 		App:           e.App,
 		Version:       e.Version,
-		UserAgent:     e.App,
-		XLHDAgent:     e.DeviceID,
-		HardwareOrGUI: e.UtmTerm,
+		UserAgent:     e.UserAgent,
+		XLHDAgent:     e.XLHDAgent,
+		HardwareOrGUI: e.HardwareOrGUI,
 
 		ToQueueDatetime:  now,
 		ToQueueTimestamp: now.Unix(),
