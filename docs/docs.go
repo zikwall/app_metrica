@@ -119,10 +119,10 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "202": {
                         "description": "ok",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/gateway.DebugMessage"
                         }
                     },
                     "422": {
@@ -304,6 +304,26 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "time.Time": {
+                    "type": "string"
+                }
+            }
+        },
+        "gateway.DebugMessage": {
+            "type": "object",
+            "properties": {
+                "ip": {
+                    "type": "string"
+                },
+                "ips": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "xforwardedFor": {
+                    "type": "string"
+                },
+                "xrealIP": {
                     "type": "string"
                 }
             }
