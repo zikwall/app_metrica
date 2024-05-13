@@ -699,6 +699,14 @@ func easyjsonF642ad3eDecodeGithubComZikwallAppMetricaPkgDomain2(in *jlexer.Lexer
 			out.Version = int(in.Int())
 		case "sdk_version":
 			out.SdkVersion = int(in.Int())
+		case "user_agent":
+			out.UserAgent = string(in.String())
+		case "xlhd_agent":
+			out.XLHDAgent = string(in.String())
+		case "hardware_or_gui":
+			out.HardwareOrGUI = string(in.String())
+		case "uniq_id":
+			out.UniqID = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -957,6 +965,26 @@ func easyjsonF642ad3eEncodeGithubComZikwallAppMetricaPkgDomain2(out *jwriter.Wri
 		const prefix string = ",\"sdk_version\":"
 		out.RawString(prefix)
 		out.Int(int(in.SdkVersion))
+	}
+	{
+		const prefix string = ",\"user_agent\":"
+		out.RawString(prefix)
+		out.String(string(in.UserAgent))
+	}
+	{
+		const prefix string = ",\"xlhd_agent\":"
+		out.RawString(prefix)
+		out.String(string(in.XLHDAgent))
+	}
+	{
+		const prefix string = ",\"hardware_or_gui\":"
+		out.RawString(prefix)
+		out.String(string(in.HardwareOrGUI))
+	}
+	{
+		const prefix string = ",\"uniq_id\":"
+		out.RawString(prefix)
+		out.String(string(in.UniqID))
 	}
 	out.RawByte('}')
 }

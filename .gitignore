@@ -25,6 +25,7 @@ go.work
 config.yaml
 config-producer.yaml
 config-consumer.yaml
+config-gateway.yaml
 
 *.mmdb
 !share/GeoLite2-ASN.mmdb

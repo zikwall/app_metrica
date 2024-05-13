@@ -20,3 +20,9 @@
 ### How work with Kafka
 
 - [See manual](/cluster/kafka/README.md)
+
+### How generate swagger docs
+
+```bash
+swag init -g ./cmd/gateway/main.go
+```
