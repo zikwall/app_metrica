@@ -238,3 +238,16 @@ func (ct *EventDatetime) MarshalJSON() ([]byte, error) {
 	}
 	return []byte(fmt.Sprintf("\"%s\"", ct.Time.Format(dtLayout))), nil
 }
+
+func (ct *EventDatetime) Validate() error {
+	minDatetime := time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+	maxDatetime := time.Date(2106, 2, 7, 6, 28, 15, 0, time.UTC)
+
+	if ct.IsZero() {
+		return fmt.Errorf("invalid event_datetime: zero value")
+	}
+	if ct.Before(minDatetime) || ct.After(maxDatetime) {
+		return fmt.Errorf("invalid event_datetime: out of range [%s, %s]", minDatetime, maxDatetime)
+	}
+	return nil
+}
