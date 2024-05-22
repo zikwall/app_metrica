@@ -47,10 +47,11 @@ type ErrorMessage struct {
 }
 
 type DebugMessage struct {
-	IP            string
-	IPs           []string
-	XRealIP       string
-	XForwardedFor string
+	RealIP        string   `json:"real_ip"`
+	IP            string   `json:"ip"`
+	IPs           []string `json:"ips"`
+	XRealIP       string   `json:"x_real_ip"`
+	XForwardedFor string   `json:"x_forwarded_for"`
 }
 
 // @Summary		Debug event fields
@@ -79,6 +80,7 @@ func (h *Handler) eventDebug(ctx *fiber.Ctx) error {
 		})
 	}
 	return ctx.Status(http.StatusAccepted).JSON(DebugMessage{
+		RealIP:        fiberext.RealIP(ctx),
 		IP:            ctx.IP(),
 		IPs:           ctx.IPs(),
 		XRealIP:       ctx.Get("X-Real-IP"),
