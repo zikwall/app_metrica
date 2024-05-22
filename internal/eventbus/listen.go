@@ -39,7 +39,8 @@ func (e *EventBus) DebugMessage(ev Event) error {
 	if err = json.Unmarshal(ev.data, event); err != nil {
 		return err
 	}
-	return nil
+
+	return event.EventDatetime.Validate()
 }
 
 func (e *EventBus) listen(ctx context.Context, number int) {
