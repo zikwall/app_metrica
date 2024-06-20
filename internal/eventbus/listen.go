@@ -3,6 +3,7 @@ package eventbus
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/zikwall/app_metrica/pkg/domain"
 	"github.com/zikwall/app_metrica/pkg/log"
 	"github.com/zikwall/app_metrica/pkg/x"
+	"github.com/zikwall/app_metrica/pkg/xerror"
 )
 
 func (e *EventBus) newKafkaWriter() *kafka.Writer {
@@ -194,19 +196,31 @@ func (e *EventBus) listen(ctx context.Context, number int) {
 			switch event.evt {
 			case EventTypeInline:
 				if err := handleEvent(event); err != nil {
-					log.Warningf("producer proc: %s", err)
+					e.handleErrorMetric(err)
 				}
 			case EventTypeBatch:
 				if err := handleEvents(event); err != nil {
-					log.Warningf("producer proc: %s", err)
+					e.handleErrorMetric(err)
 				}
 			}
 		case <-flushTicker.C:
 			if err := handleVoidBuffer(); err != nil {
-				log.Warningf("producer proc: %s", err)
+				e.handleErrorMetric(err)
 			}
 		}
 	}
+}
+
+func (e *EventBus) handleErrorMetric(err error) {
+	log.Warningf("producer proc: %s", err)
+
+	var ep *xerror.ErrPacket
+	if errors.As(err, &ep) {
+		// without data fields
+		e.metrics.IncGatewayError(ep.Unwrap())
+		return
+	}
+	e.metrics.IncGatewayError(err)
 }
 
 func handleBytes(e Event) ([]byte, error) {
@@ -215,7 +229,10 @@ func handleBytes(e Event) ([]byte, error) {
 		event = &domain.Event{}
 	)
 	if err = easyjson.Unmarshal(e.data, event); err != nil {
-		return nil, fmt.Errorf("unmarshal json object: %w, %s", err, string(e.data))
+		return nil, xerror.NewErrPacket(
+			fmt.Errorf("unmarshal json object: %w", err),
+			string(e.data),
+		)
 	}
 
 	exEvent := domain.ExtendEvent(event, time.Now(), e.t)
@@ -234,7 +251,10 @@ func handleMultipleBytes(e Event) ([][]byte, error) {
 		events domain.Events
 	)
 	if err = easyjson.Unmarshal(e.data, &events); err != nil {
-		return nil, err
+		return nil, xerror.NewErrPacket(
+			fmt.Errorf("unmarshal json object: %w", err),
+			string(e.data),
+		)
 	}
 
 	bytes := make([][]byte, len(events))

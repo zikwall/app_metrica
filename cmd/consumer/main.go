@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"github.com/zikwall/app_metrica/internal/metrics"
+	"github.com/zikwall/app_metrica/pkg/prometheus"
 	"net"
 	"os"
 
@@ -111,12 +113,14 @@ func Main(ctx *cli.Context) error {
 		log.Info("received a system signal to shutdown AppMetrica, start shutdown process..")
 	})
 
-	app := fiber.New(fiber.Config{
-		Prefork:      cfg.Prefork,
-		ErrorHandler: fiberext.ErrorHandler,
-	})
-
 	go func() {
+		app := fiber.New(fiber.Config{
+			Prefork:      cfg.Prefork,
+			ErrorHandler: fiberext.ErrorHandler,
+		})
+
+		app.Get("/metrics", prometheus.FastHTTPAdapter())
+
 		var ln net.Listener
 		if ln, err = signal.Listener(
 			metrica.Context(),
@@ -132,7 +136,9 @@ func Main(ctx *cli.Context) error {
 		}
 	}()
 
-	consul := consumer.New(metrica.Writer, metrica.ReaderCity.Reader(), metrica.ReaderASN.Reader(), cfg)
+	metro := metrics.New()
+
+	consul := consumer.New(metrica.Writer, metrica.ReaderCity.Reader(), metrica.ReaderASN.Reader(), cfg, metro)
 	go func() {
 		consul.Run(metrica.Context())
 	}()

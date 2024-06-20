@@ -17,6 +17,10 @@ import (
 	"github.com/zikwall/app_metrica/pkg/log"
 )
 
+type Metrics interface {
+	IncConsumerError(err error)
+}
+
 type Consumer struct {
 	city   *geoip2.Reader
 	asn    *geoip2.Reader
@@ -24,6 +28,8 @@ type Consumer struct {
 
 	wg  *sync.WaitGroup
 	opt *config.Config
+
+	metrics Metrics
 
 	queue chan kafka.Message
 }
@@ -114,6 +120,8 @@ func (c *Consumer) handle(ctx context.Context, number int) {
 
 			event := &domain.EventExtended{}
 			if err := easyjson.Unmarshal(m.Value, event); err != nil {
+				c.metrics.IncConsumerError(err)
+
 				log.Warningf("consumer proc: unmarshal json %s", err)
 				continue
 			}
@@ -176,13 +184,19 @@ func (c *Consumer) enrichRecordLocation(record *domain.Record, nIP net.IP) {
 	}
 }
 
-func New(writer clickhousebuffer.Writer, city, asn *geoip2.Reader, opt *config.Config) *Consumer {
+func New(
+	writer clickhousebuffer.Writer,
+	city, asn *geoip2.Reader,
+	opt *config.Config,
+	metrics Metrics,
+) *Consumer {
 	return &Consumer{
-		writer: writer,
-		city:   city,
-		asn:    asn,
-		wg:     &sync.WaitGroup{},
-		opt:    opt,
-		queue:  make(chan kafka.Message, 10000),
+		writer:  writer,
+		city:    city,
+		asn:     asn,
+		wg:      &sync.WaitGroup{},
+		metrics: metrics,
+		opt:     opt,
+		queue:   make(chan kafka.Message, 10000),
 	}
 }

@@ -11,6 +11,9 @@ type Metrics struct {
 	rm *prometheus.CounterVec
 	qm *prometheus.CounterVec
 
+	gatewayErr *prometheus.CounterVec
+	queueErr   *prometheus.CounterVec
+
 	rmDur *prometheus.HistogramVec
 	qmDur *prometheus.HistogramVec
 }
@@ -31,6 +34,14 @@ func (m *Metrics) QueueDuration(start time.Time, size int, err error) {
 	m.qmDur.WithLabelValues(strconv.Itoa(size), strconv.FormatBool(err != nil)).Observe(time.Since(start).Seconds())
 }
 
+func (m *Metrics) IncConsumerError(err error) {
+	m.queueErr.WithLabelValues(err.Error()).Inc()
+}
+
+func (m *Metrics) IncGatewayError(err error) {
+	m.gatewayErr.WithLabelValues(err.Error()).Inc()
+}
+
 func New() *Metrics {
 	m := &Metrics{
 		rm: prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -46,6 +57,22 @@ func New() *Metrics {
 			Name:      "queue",
 		},
 			[]string{"size", "by_ticker", "err"},
+		),
+
+		queueErr: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Namespace: "own_metrics",
+			Subsystem: "consumer",
+			Name:      "errors",
+		},
+			[]string{"err"},
+		),
+
+		gatewayErr: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Namespace: "own_metrics",
+			Subsystem: "gateway",
+			Name:      "errors",
+		},
+			[]string{"err"},
 		),
 
 		rmDur: prometheus.NewHistogramVec(
@@ -68,7 +95,7 @@ func New() *Metrics {
 		),
 	}
 
-	prometheus.MustRegister(m.rm, m.qm, m.rmDur, m.qmDur)
+	prometheus.MustRegister(m.rm, m.qm, m.queueErr, m.gatewayErr, m.rmDur, m.qmDur)
 
 	return m
 }
