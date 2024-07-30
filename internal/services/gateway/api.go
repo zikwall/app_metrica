@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/utils"
 
 	"github.com/zikwall/app_metrica/internal/eventbus"
 	"github.com/zikwall/app_metrica/internal/metrics"
@@ -72,7 +73,9 @@ func (h *Handler) eventDebug(ctx *fiber.Ctx) error {
 	dst := make([]byte, len(body))
 	copy(dst, body)
 
-	err := h.bus.DebugMessage(eventbus.NewEvent(dst, fiberext.RealIP(ctx), time.Now(), eventbus.EventTypeInline))
+	err := h.bus.DebugMessage(
+		eventbus.NewEvent(dst, utils.CopyString(fiberext.RealIP(ctx)), time.Now(), eventbus.EventTypeInline),
+	)
 	if err != nil {
 		return ctx.Status(http.StatusUnprocessableEntity).JSON(ErrorMessage{
 			Error:       err.Error(),
@@ -83,8 +86,8 @@ func (h *Handler) eventDebug(ctx *fiber.Ctx) error {
 		RealIP:        fiberext.RealIP(ctx),
 		IP:            ctx.IP(),
 		IPs:           ctx.IPs(),
-		XRealIP:       ctx.Get("X-Real-IP"),
-		XForwardedFor: ctx.Get("X-Forwarded-For"),
+		XRealIP:       utils.CopyString(ctx.Get("X-Real-IP")),
+		XForwardedFor: utils.CopyString(ctx.Get("X-Forwarded-For")),
 	})
 }
 
@@ -109,7 +112,7 @@ func (h *Handler) event(ctx *fiber.Ctx) error {
 
 	// non-blocking, asynchronously write to queue and EventBus
 	h.bus.SendEvent(
-		eventbus.NewEvent(dst, fiberext.RealIP(ctx), time.Now(), eventbus.EventTypeInline),
+		eventbus.NewEvent(dst, utils.CopyString(fiberext.RealIP(ctx)), time.Now(), eventbus.EventTypeInline),
 	)
 
 	h.metrics.IncRequests(false)
@@ -139,7 +142,7 @@ func (h *Handler) eventBatch(ctx *fiber.Ctx) error {
 
 	// non-blocking, asynchronously write to queue and EventBus
 	h.bus.SendEvent(
-		eventbus.NewEvent(dst, fiberext.RealIP(ctx), time.Now(), eventbus.EventTypeBatch),
+		eventbus.NewEvent(dst, utils.CopyString(fiberext.RealIP(ctx)), time.Now(), eventbus.EventTypeBatch),
 	)
 
 	h.metrics.IncRequests(true)
