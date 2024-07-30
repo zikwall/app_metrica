@@ -40,6 +40,8 @@ func (h *Handler) MountRoutes(app *fiber.App) {
 	internalV1.Post("/event-batch", h.eventBatch)
 
 	internalV1.Post("/event-debug", h.eventDebug)
+
+	internalV1.Get("/event/mediavitrina", h.eventMedia)
 }
 
 type ErrorMessage struct {
@@ -149,6 +151,12 @@ func (h *Handler) eventBatch(ctx *fiber.Ctx) error {
 	h.metrics.RequestsDuration(start, true)
 
 	return ctx.SendStatus(http.StatusNoContent)
+}
+
+func (h *Handler) eventMedia(ctx *fiber.Ctx) error {
+	queries := ctx.Queries()
+
+	return ctx.Status(http.StatusOK).JSON(queries)
 }
 
 func NewHandler(bus EventBus, metrics *metrics.Metrics) *Handler {
