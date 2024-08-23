@@ -1,9 +1,7 @@
 package gateway
 
 import (
-	"encoding/json"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -157,26 +155,6 @@ func (h *Handler) eventBatch(ctx *fiber.Ctx) error {
 
 func (h *Handler) eventMedia(ctx *fiber.Ctx) error {
 	queries := ctx.Queries()
-
-	// temporary
-	file, err := os.OpenFile("/tmp/media_queries", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		_ = file.Close()
-	}()
-
-	_, err = file.WriteString("\n")
-	_, err = file.WriteString(time.Now().String())
-
-	b, err := json.Marshal(queries)
-	if err != nil {
-		return err
-	}
-
-	_, err = file.Write(b)
 
 	return ctx.Status(http.StatusOK).JSON(queries)
 }
