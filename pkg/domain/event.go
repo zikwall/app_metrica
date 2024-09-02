@@ -139,6 +139,11 @@ type EventExtended struct {
 	ToQueueTimestamp int64     `json:"to_queue_timestamp"`
 
 	SdkVersion int `json:"sdk_version"`
+
+	FromQueueDatetime time.Time `json:"-"`
+	Region            string    `json:"-"`
+	AS                uint32    `json:"-"`
+	ORG               string    `json:"-"`
 }
 
 func ExtendEvent(e *Event, now time.Time, receive time.Time) *EventExtended {

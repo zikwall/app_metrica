@@ -1,6 +1,6 @@
 CREATE DATABASE IF NOT EXISTS appmetrica ON CLUSTER cluster_1;
 
-CREATE TABLE IF NOT EXISTS appmetrica.events ON CLUSTER cluster_1
+CREATE TABLE IF NOT EXISTS appmetrica.events ON CLUSTER `ch-cluster1`
 (
     `application_id` Int64,
     `ios_ifa` String,
@@ -84,9 +84,9 @@ CREATE TABLE IF NOT EXISTS appmetrica.events ON CLUSTER cluster_1
     `from_queue_timestamp` Int64,
     `sdk_version` UInt32
 )
-ENGINE = Distributed('cluster_1', 'appmetrica', 'events_sharded', rand());
+ENGINE = Distributed('ch-cluster1', 'appmetrica', 'events_sharded', rand());
 
-CREATE TABLE IF NOT EXISTS appmetrica.events_sharded ON CLUSTER cluster_1
+CREATE TABLE IF NOT EXISTS appmetrica.events_sharded ON CLUSTER `ch-cluster1`
 (
     `application_id` Int64,
     `ios_ifa` String,
@@ -172,7 +172,7 @@ CREATE TABLE IF NOT EXISTS appmetrica.events_sharded ON CLUSTER cluster_1
 ) ENGINE = ReplicatedMergeTree('/clickhouse/tables/{layer}-{shard}/events_sharded', '{replica}')
 PARTITION BY toYYYYMM(event_receive_datetime)
 ORDER BY (event_receive_datetime, appmetrica_device_id, ip)
-TTL event_receive_datetime + INTERVAL 16 DAY;
+TTL event_receive_datetime + INTERVAL 30 DAY;
 
-ALTER TABLE appmetrica.events ON CLUSTER cluster_1 ADD COLUMN event_insert_datetime DateTime;
-ALTER TABLE appmetrica.events_sharded ON CLUSTER cluster_1 ADD COLUMN event_insert_datetime DateTime default now();
+ALTER TABLE appmetrica.events ON CLUSTER `ch-cluster1` ADD COLUMN event_insert_datetime DateTime;
+ALTER TABLE appmetrica.events_sharded ON CLUSTER `ch-cluster1` ADD COLUMN event_insert_datetime DateTime default now();

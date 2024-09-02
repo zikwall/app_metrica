@@ -2,20 +2,21 @@ package main
 
 import (
 	"context"
-	"github.com/zikwall/app_metrica/internal/metrics"
-	"github.com/zikwall/app_metrica/pkg/prometheus"
 	"net"
 	"os"
 
 	"github.com/bugsnag/bugsnag-go/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/urfave/cli/v2"
-	"github.com/zikwall/app_metrica/internal/services/consumer"
 
 	"github.com/zikwall/app_metrica/config"
 	"github.com/zikwall/app_metrica/internal/appmetrica"
+	"github.com/zikwall/app_metrica/internal/infrastructure/repositories/clickhouse/event"
+	"github.com/zikwall/app_metrica/internal/metrics"
+	"github.com/zikwall/app_metrica/internal/services/consumer"
 	"github.com/zikwall/app_metrica/pkg/fiberext"
 	"github.com/zikwall/app_metrica/pkg/log"
+	"github.com/zikwall/app_metrica/pkg/prometheus"
 	"github.com/zikwall/app_metrica/pkg/signal"
 )
 
@@ -138,7 +139,13 @@ func Main(ctx *cli.Context) error {
 
 	metro := metrics.New()
 
-	consul := consumer.New(metrica.Writer, metrica.ReaderCity.Reader(), metrica.ReaderASN.Reader(), cfg, metro)
+	consul := consumer.New(
+		event.New(metrica.Writer),
+		metrica.ReaderCity.Reader(),
+		metrica.ReaderASN.Reader(),
+		cfg,
+		metro,
+	)
 	go func() {
 		consul.Run(metrica.Context())
 	}()

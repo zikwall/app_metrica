@@ -214,11 +214,11 @@ func RecordFromEvent(e *EventExtended) *Record {
 		EventReceiveTimestamp: e.EventTimestamp,
 
 		IP:             e.IP,
-		Region:         "",
-		AS:             0,
-		ORG:            "",
-		CountryIsoCode: "",
-		City:           "",
+		Region:         e.Region,
+		AS:             e.AS,
+		ORG:            e.ORG,
+		CountryIsoCode: e.CountryIsoCode,
+		City:           e.City,
 
 		Timezone: e.Timezone,
 
@@ -256,6 +256,9 @@ func RecordFromEvent(e *EventExtended) *Record {
 		ToQueueTimestamp: e.ToQueueTimestamp,
 
 		SdkVersion: e.SdkVersion,
+
+		FromQueueDatetime:  e.FromQueueDatetime,
+		FromQueueTimestamp: e.FromQueueDatetime.Unix(),
 	}
 }
 

@@ -10,21 +10,26 @@ import (
 	"github.com/mailru/easyjson"
 	"github.com/oschwald/geoip2-golang"
 	"github.com/segmentio/kafka-go"
-	clickhousebuffer "github.com/zikwall/clickhouse-buffer/v4"
-
 	"github.com/zikwall/app_metrica/config"
 	"github.com/zikwall/app_metrica/pkg/domain"
 	"github.com/zikwall/app_metrica/pkg/log"
 )
+
+type EventRepository interface {
+	AddEvent(
+		ctx context.Context,
+		event *domain.EventExtended,
+	) error
+}
 
 type Metrics interface {
 	IncConsumerError(err error)
 }
 
 type Consumer struct {
-	city   *geoip2.Reader
-	asn    *geoip2.Reader
-	writer clickhousebuffer.Writer
+	city            *geoip2.Reader
+	asn             *geoip2.Reader
+	eventRepository EventRepository
 
 	wg  *sync.WaitGroup
 	opt *config.Config
@@ -126,23 +131,23 @@ func (c *Consumer) handle(ctx context.Context, number int) {
 				continue
 			}
 
-			record := domain.RecordFromEvent(event)
-			record.FromQueueDatetime = now
-			record.FromQueueTimestamp = now.Unix()
+			event.FromQueueDatetime = now
 
 			if c.opt.Internal.WithGeo && event.IP != "" {
 				nIP := net.ParseIP(event.IP)
 				if nIP != nil {
-					c.enrichRecordLocation(record, nIP)
+					c.enrichEventLocation(event, nIP)
 				}
 			}
 
-			c.writer.TryWriteRow(record)
+			if err := c.eventRepository.AddEvent(ctx, event); err != nil {
+				log.Warningf("consumer proc: add event: %s", err)
+			}
 		}
 	}
 }
 
-func (c *Consumer) enrichRecordLocation(record *domain.Record, nIP net.IP) {
+func (c *Consumer) enrichEventLocation(record *domain.EventExtended, nIP net.IP) {
 	var (
 		err  error
 		city *geoip2.City
@@ -185,18 +190,18 @@ func (c *Consumer) enrichRecordLocation(record *domain.Record, nIP net.IP) {
 }
 
 func New(
-	writer clickhousebuffer.Writer,
+	eventRepository EventRepository,
 	city, asn *geoip2.Reader,
 	opt *config.Config,
 	metrics Metrics,
 ) *Consumer {
 	return &Consumer{
-		writer:  writer,
-		city:    city,
-		asn:     asn,
-		wg:      &sync.WaitGroup{},
-		metrics: metrics,
-		opt:     opt,
-		queue:   make(chan kafka.Message, 10000),
+		eventRepository: eventRepository,
+		city:            city,
+		asn:             asn,
+		wg:              &sync.WaitGroup{},
+		metrics:         metrics,
+		opt:             opt,
+		queue:           make(chan kafka.Message, 10000),
 	}
 }
