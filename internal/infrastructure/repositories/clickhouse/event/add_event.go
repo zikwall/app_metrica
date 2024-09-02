@@ -3,16 +3,15 @@ package event
 import (
 	"context"
 
-	"github.com/zikwall/app_metrica/pkg/domain"
+	"github.com/zikwall/app_metrica/pkg/domain/event"
 )
 
 func (r *Repository) AddEvent(
-	ctx context.Context,
-	event *domain.EventExtended,
+	_ context.Context,
+	event *event.EventExtended,
 ) error {
 	r.writer.TryWriteRow(
-		domain.RecordFromEvent(event),
+		recordFromEvent(event),
 	)
-
 	return nil
 }

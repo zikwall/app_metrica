@@ -10,15 +10,16 @@ import (
 	"github.com/mailru/easyjson"
 	"github.com/oschwald/geoip2-golang"
 	"github.com/segmentio/kafka-go"
+
 	"github.com/zikwall/app_metrica/config"
-	"github.com/zikwall/app_metrica/pkg/domain"
+	"github.com/zikwall/app_metrica/pkg/domain/event"
 	"github.com/zikwall/app_metrica/pkg/log"
 )
 
 type EventRepository interface {
 	AddEvent(
 		ctx context.Context,
-		event *domain.EventExtended,
+		event *event.EventExtended,
 	) error
 }
 
@@ -123,7 +124,7 @@ func (c *Consumer) handle(ctx context.Context, number int) {
 		case m := <-c.queue:
 			now := time.Now()
 
-			event := &domain.EventExtended{}
+			event := &event.EventExtended{}
 			if err := easyjson.Unmarshal(m.Value, event); err != nil {
 				c.metrics.IncConsumerError(err)
 
@@ -147,7 +148,7 @@ func (c *Consumer) handle(ctx context.Context, number int) {
 	}
 }
 
-func (c *Consumer) enrichEventLocation(record *domain.EventExtended, nIP net.IP) {
+func (c *Consumer) enrichEventLocation(record *event.EventExtended, nIP net.IP) {
 	var (
 		err  error
 		city *geoip2.City

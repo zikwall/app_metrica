@@ -11,7 +11,7 @@ import (
 	"github.com/segmentio/kafka-go"
 
 	"github.com/zikwall/app_metrica/pkg/buffer"
-	"github.com/zikwall/app_metrica/pkg/domain"
+	"github.com/zikwall/app_metrica/pkg/domain/event"
 	"github.com/zikwall/app_metrica/pkg/log"
 	"github.com/zikwall/app_metrica/pkg/x"
 	"github.com/zikwall/app_metrica/pkg/xerror"
@@ -35,14 +35,14 @@ func (e *EventBus) newKafkaWriter() *kafka.Writer {
 
 func (e *EventBus) DebugMessage(ev Event) error {
 	var (
-		err   error
-		event = &domain.Event{}
+		err error
+		evt = &event.Event{}
 	)
-	if err = json.Unmarshal(ev.data, event); err != nil {
+	if err = json.Unmarshal(ev.data, evt); err != nil {
 		return err
 	}
 
-	return event.EventDatetime.Validate()
+	return evt.EventDatetime.Validate()
 }
 
 func (e *EventBus) listen(ctx context.Context, number int) {
@@ -192,14 +192,14 @@ func (e *EventBus) listen(ctx context.Context, number int) {
 		case <-ctx.Done():
 			flushTicker.Stop()
 			return
-		case event := <-e.events:
-			switch event.evt {
+		case ev := <-e.events:
+			switch ev.evt {
 			case EventTypeInline:
-				if err := handleEvent(event); err != nil {
+				if err := handleEvent(ev); err != nil {
 					e.handleErrorMetric(err)
 				}
 			case EventTypeBatch:
-				if err := handleEvents(event); err != nil {
+				if err := handleEvents(ev); err != nil {
 					e.handleErrorMetric(err)
 				}
 			}
@@ -225,17 +225,17 @@ func (e *EventBus) handleErrorMetric(err error) {
 
 func handleBytes(e Event) ([]byte, error) {
 	var (
-		err   error
-		event = &domain.Event{}
+		err error
+		evt = &event.Event{}
 	)
-	if err = easyjson.Unmarshal(e.data, event); err != nil {
+	if err = easyjson.Unmarshal(e.data, evt); err != nil {
 		return nil, xerror.NewErrPacket(
 			fmt.Errorf("unmarshal json object: %w", err),
 			string(e.data),
 		)
 	}
 
-	exEvent := domain.ExtendEvent(event, time.Now(), e.t)
+	exEvent := event.ExtendEvent(evt, time.Now(), e.t)
 	exEvent.IP = e.ip
 
 	var bytes []byte
@@ -248,7 +248,7 @@ func handleBytes(e Event) ([]byte, error) {
 func handleMultipleBytes(e Event) ([][]byte, error) {
 	var (
 		err    error
-		events domain.Events
+		events event.Events
 	)
 	if err = easyjson.Unmarshal(e.data, &events); err != nil {
 		return nil, xerror.NewErrPacket(
@@ -259,7 +259,7 @@ func handleMultipleBytes(e Event) ([][]byte, error) {
 
 	bytes := make([][]byte, len(events))
 	for i := range events {
-		exEvent := domain.ExtendEvent(events[i], time.Now(), e.t)
+		exEvent := event.ExtendEvent(events[i], time.Now(), e.t)
 		exEvent.IP = e.ip
 
 		var extBytes []byte

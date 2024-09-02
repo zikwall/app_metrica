@@ -1,9 +1,11 @@
-package domain
+package event
 
 import (
 	"time"
 
 	"github.com/zikwall/clickhouse-buffer/v4/src/cx"
+
+	"github.com/zikwall/app_metrica/pkg/domain/event"
 )
 
 type ScreenOrientation string
@@ -182,7 +184,7 @@ func (r *Record) Row() cx.Vector {
 	}
 }
 
-func RecordFromEvent(e *EventExtended) *Record {
+func recordFromEvent(e *event.EventExtended) *Record {
 	return &Record{
 		ApplicationID:      e.ApplicationID,
 		IosIfa:             e.IosIfa,

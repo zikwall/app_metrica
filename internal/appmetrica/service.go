@@ -11,8 +11,8 @@ import (
 	"github.com/zikwall/clickhouse-buffer/v4/src/db/cxnative"
 
 	"github.com/zikwall/app_metrica/config"
+	"github.com/zikwall/app_metrica/internal/infrastructure/repositories/clickhouse/event"
 	"github.com/zikwall/app_metrica/pkg/click"
-	"github.com/zikwall/app_metrica/pkg/domain"
 	"github.com/zikwall/app_metrica/pkg/drop"
 	"github.com/zikwall/app_metrica/pkg/geolocation"
 	"github.com/zikwall/app_metrica/pkg/kfk"
@@ -105,7 +105,7 @@ func New(ctx context.Context, opt *Options) (*AppMetrica, error) {
 			clickhouse.Context(context.Background(), clickhouse.WithSettings(clickhouse.Settings{
 				"max_execution_time": opt.Internal.ChWriteTimeout.Seconds(),
 			})),
-			cx.NewView(opt.Internal.MetricTable, domain.Columns()),
+			cx.NewView(opt.Internal.MetricTable, event.Columns()),
 			cxmem.NewBuffer(client.Options().BatchSize()),
 		)
 	}
