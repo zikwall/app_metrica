@@ -15,9 +15,10 @@ import (
 
 	"github.com/zikwall/app_metrica/config"
 	"github.com/zikwall/app_metrica/internal/appmetrica"
-	"github.com/zikwall/app_metrica/internal/eventbus"
 	"github.com/zikwall/app_metrica/internal/metrics"
 	"github.com/zikwall/app_metrica/internal/services/gateway"
+	"github.com/zikwall/app_metrica/internal/services/gateway/eventbus"
+	"github.com/zikwall/app_metrica/internal/services/gateway/handlers/own"
 	"github.com/zikwall/app_metrica/pkg/fiberext"
 	"github.com/zikwall/app_metrica/pkg/log"
 	"github.com/zikwall/app_metrica/pkg/prometheus"
@@ -121,13 +122,24 @@ func Main(ctx *cli.Context) error {
 	}
 
 	metro := metrics.New()
-	bus := eventbus.NewEventBus(cfg, metro)
+	metroVitrina := metrics.NewVitrina()
+
+	ownBus := eventbus.NewEventBus(
+		cfg,
+		metro,
+		"own_metrics",
+		own.HandleBytes,
+		own.HandleMultipleBytes,
+		own.DebugMessage,
+	)
 
 	defer func() {
 		metrica.Shutdown(func(err error) {
 			log.Warning(err)
 		})
-		<-bus.Done
+
+		<-ownBus.Done
+
 		metrica.Stacktrace()
 	}()
 
@@ -137,7 +149,7 @@ func Main(ctx *cli.Context) error {
 
 	// run event bus
 	go func() {
-		bus.Run(metrica.Context())
+		ownBus.Run(metrica.Context())
 	}()
 
 	// run HTTP server for receive events
@@ -151,7 +163,7 @@ func Main(ctx *cli.Context) error {
 		app.Get("/swagger/*", swagger.HandlerDefault)
 		app.Get("/metrics", prometheus.FastHTTPAdapter())
 
-		handler := gateway.NewHandler(bus, metro)
+		handler := gateway.NewHandler(ownBus, metro, metroVitrina)
 		handler.MountRoutes(app)
 
 		var ln net.Listener

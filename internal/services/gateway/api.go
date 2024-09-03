@@ -7,8 +7,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 
-	"github.com/zikwall/app_metrica/internal/eventbus"
 	"github.com/zikwall/app_metrica/internal/metrics"
+	"github.com/zikwall/app_metrica/internal/services/gateway/eventbus"
 	"github.com/zikwall/app_metrica/pkg/fiberext"
 )
 
@@ -18,8 +18,10 @@ type EventBus interface {
 }
 
 type Handler struct {
-	bus     EventBus
-	metrics *metrics.Metrics
+	ownBus EventBus
+
+	metrics        *metrics.Metrics
+	metricsVitrina *metrics.MetricsVitrina
 }
 
 // MountRoutes godoc
@@ -75,7 +77,7 @@ func (h *Handler) eventDebug(ctx *fiber.Ctx) error {
 	dst := make([]byte, len(body))
 	copy(dst, body)
 
-	err := h.bus.DebugMessage(
+	err := h.ownBus.DebugMessage(
 		eventbus.NewEvent(dst, utils.CopyString(fiberext.RealIP(ctx)), time.Now(), eventbus.EventTypeInline),
 	)
 	if err != nil {
@@ -113,7 +115,7 @@ func (h *Handler) event(ctx *fiber.Ctx) error {
 	copy(dst, body)
 
 	// non-blocking, asynchronously write to queue and EventBus
-	h.bus.SendEvent(
+	h.ownBus.SendEvent(
 		eventbus.NewEvent(dst, utils.CopyString(fiberext.RealIP(ctx)), time.Now(), eventbus.EventTypeInline),
 	)
 
@@ -143,7 +145,7 @@ func (h *Handler) eventBatch(ctx *fiber.Ctx) error {
 	copy(dst, body)
 
 	// non-blocking, asynchronously write to queue and EventBus
-	h.bus.SendEvent(
+	h.ownBus.SendEvent(
 		eventbus.NewEvent(dst, utils.CopyString(fiberext.RealIP(ctx)), time.Now(), eventbus.EventTypeBatch),
 	)
 
@@ -159,9 +161,14 @@ func (h *Handler) eventMedia(ctx *fiber.Ctx) error {
 	return ctx.Status(http.StatusOK).JSON(queries)
 }
 
-func NewHandler(bus EventBus, metrics *metrics.Metrics) *Handler {
+func NewHandler(
+	ownBus EventBus,
+	metrics *metrics.Metrics,
+	metricsVitrina *metrics.MetricsVitrina,
+) *Handler {
 	return &Handler{
-		bus:     bus,
-		metrics: metrics,
+		ownBus:         ownBus,
+		metrics:        metrics,
+		metricsVitrina: metricsVitrina,
 	}
 }
