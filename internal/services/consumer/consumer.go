@@ -124,24 +124,24 @@ func (c *Consumer) handle(ctx context.Context, number int) {
 		case m := <-c.queue:
 			now := time.Now()
 
-			event := &event.EventExtended{}
-			if err := easyjson.Unmarshal(m.Value, event); err != nil {
+			evt := &event.EventExtended{}
+			if err := easyjson.Unmarshal(m.Value, evt); err != nil {
 				c.metrics.IncConsumerError(err)
 
 				log.Warningf("consumer proc: unmarshal json %s", err)
 				continue
 			}
 
-			event.FromQueueDatetime = now
+			evt.FromQueueDatetime = now
 
-			if c.opt.Internal.WithGeo && event.IP != "" {
-				nIP := net.ParseIP(event.IP)
+			if c.opt.Internal.WithGeo && evt.IP != "" {
+				nIP := net.ParseIP(evt.IP)
 				if nIP != nil {
-					c.enrichEventLocation(event, nIP)
+					c.enrichEventLocation(evt, nIP)
 				}
 			}
 
-			if err := c.eventRepository.AddEvent(ctx, event); err != nil {
+			if err := c.eventRepository.AddEvent(ctx, evt); err != nil {
 				log.Warningf("consumer proc: add event: %s", err)
 			}
 		}

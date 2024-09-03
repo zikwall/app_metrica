@@ -2,16 +2,13 @@ package eventbus
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
 
-	"github.com/mailru/easyjson"
 	"github.com/segmentio/kafka-go"
 
 	"github.com/zikwall/app_metrica/pkg/buffer"
-	"github.com/zikwall/app_metrica/pkg/domain/event"
 	"github.com/zikwall/app_metrica/pkg/log"
 	"github.com/zikwall/app_metrica/pkg/x"
 	"github.com/zikwall/app_metrica/pkg/xerror"
@@ -31,18 +28,6 @@ func (e *EventBus) newKafkaWriter() *kafka.Writer {
 		ReadTimeout:     e.opt.KafkaWriter.ReadTimeout,
 		WriteTimeout:    e.opt.KafkaWriter.WriteTimeout,
 	}
-}
-
-func (e *EventBus) DebugMessage(ev Event) error {
-	var (
-		err error
-		evt = &event.Event{}
-	)
-	if err = json.Unmarshal(ev.data, evt); err != nil {
-		return err
-	}
-
-	return evt.EventDatetime.Validate()
 }
 
 func (e *EventBus) listen(ctx context.Context, number int) {
@@ -136,7 +121,7 @@ func (e *EventBus) listen(ctx context.Context, number int) {
 			e.metrics.QueueDuration(start, 1, err)
 		}()
 
-		bytes, err = handleBytes(event)
+		bytes, err = e.byteHandler(event)
 		if err != nil {
 			return fmt.Errorf("handle: %w", err)
 		}
@@ -166,7 +151,7 @@ func (e *EventBus) listen(ctx context.Context, number int) {
 			e.metrics.QueueDuration(start, len(bytes), err)
 		}()
 
-		bytes, err = handleMultipleBytes(event)
+		bytes, err = e.bytesHandler(event)
 		if err != nil {
 			return fmt.Errorf("handle: %w", err)
 		}
@@ -193,7 +178,7 @@ func (e *EventBus) listen(ctx context.Context, number int) {
 			flushTicker.Stop()
 			return
 		case ev := <-e.events:
-			switch ev.evt {
+			switch ev.Evt {
 			case EventTypeInline:
 				if err := handleEvent(ev); err != nil {
 					e.handleErrorMetric(err)
@@ -221,56 +206,6 @@ func (e *EventBus) handleErrorMetric(err error) {
 		return
 	}
 	e.metrics.IncGatewayError(err)
-}
-
-func handleBytes(e Event) ([]byte, error) {
-	var (
-		err error
-		evt = &event.Event{}
-	)
-	if err = easyjson.Unmarshal(e.data, evt); err != nil {
-		return nil, xerror.NewErrPacket(
-			fmt.Errorf("unmarshal json object: %w", err),
-			string(e.data),
-		)
-	}
-
-	exEvent := event.ExtendEvent(evt, time.Now(), e.t)
-	exEvent.IP = e.ip
-
-	var bytes []byte
-	if bytes, err = easyjson.Marshal(exEvent); err != nil {
-		return nil, err
-	}
-	return bytes, nil
-}
-
-func handleMultipleBytes(e Event) ([][]byte, error) {
-	var (
-		err    error
-		events event.Events
-	)
-	if err = easyjson.Unmarshal(e.data, &events); err != nil {
-		return nil, xerror.NewErrPacket(
-			fmt.Errorf("unmarshal json object: %w", err),
-			string(e.data),
-		)
-	}
-
-	bytes := make([][]byte, len(events))
-	for i := range events {
-		exEvent := event.ExtendEvent(events[i], time.Now(), e.t)
-		exEvent.IP = e.ip
-
-		var extBytes []byte
-		if extBytes, err = easyjson.Marshal(exEvent); err != nil {
-			return nil, err
-		}
-
-		bytes[i] = extBytes
-	}
-
-	return bytes, nil
 }
 
 func assembleMessages(m [][]byte) []kafka.Message {
