@@ -9,6 +9,7 @@ import (
 
 	"github.com/zikwall/app_metrica/internal/metrics"
 	"github.com/zikwall/app_metrica/internal/services/gateway/eventbus"
+	"github.com/zikwall/app_metrica/pkg/domain/mediavitrina"
 	"github.com/zikwall/app_metrica/pkg/fiberext"
 )
 
@@ -18,7 +19,8 @@ type EventBus interface {
 }
 
 type Handler struct {
-	ownBus EventBus
+	ownBus   EventBus
+	mediaBus EventBus
 
 	metrics        *metrics.Metrics
 	metricsVitrina *metrics.MetricsVitrina
@@ -99,7 +101,7 @@ func (h *Handler) eventDebug(ctx *fiber.Ctx) error {
 // @Description	Method receive message and send to queue
 // @Tags			Events
 // @Accept			json
-// @Param			data	body	domain.Event	true	"request event"
+// @Param			data	body	event.Event	true	"request event"
 // @Produce		json
 // @Success		201	{object}	string	"no content"
 // @Router			/internal/api/v1/event [post]
@@ -129,7 +131,7 @@ func (h *Handler) event(ctx *fiber.Ctx) error {
 // @Description	Method receive messages and send to queue
 // @Tags			Events
 // @Accept			json
-// @Param			data	body	domain.Events	true	"request events"
+// @Param			data	body	event.Events	true	"request events"
 // @Produce		json
 // @Success		201	{object}	string	"no content"
 // @Router			/internal/api/v1/event-batch [post]
@@ -155,19 +157,39 @@ func (h *Handler) eventBatch(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(http.StatusNoContent)
 }
 
+// @Summary		Receive eventMedia fields
+// @Description	Method receive messages and send to queue
+// @Tags		Events
+// @Accept		json
+// @Param		data	body	mediavitrina.MediaVitrina	true	"request events"
+// @Produce		json
+// @Success		201	{object}	string	"no content"
+// @Router		/internal/api/v1/event/mediavitrina [post]
 func (h *Handler) eventMedia(ctx *fiber.Ctx) error {
-	queries := ctx.Queries()
+	mv := mediavitrina.QueryParametersToEntity(ctx.Queries())
 
-	return ctx.Status(http.StatusOK).JSON(queries)
+	dst, err := mv.Bytes()
+	if err != nil {
+		return ctx.SendStatus(http.StatusInternalServerError)
+	}
+
+	// non-blocking, asynchronously write to queue and EventBus
+	h.mediaBus.SendEvent(
+		eventbus.NewEvent(dst, utils.CopyString(fiberext.RealIP(ctx)), time.Now(), eventbus.EventTypeInline),
+	)
+
+	return ctx.Status(http.StatusOK).Send(dst)
 }
 
 func NewHandler(
 	ownBus EventBus,
+	mediaBus EventBus,
 	metrics *metrics.Metrics,
 	metricsVitrina *metrics.MetricsVitrina,
 ) *Handler {
 	return &Handler{
 		ownBus:         ownBus,
+		mediaBus:       mediaBus,
 		metrics:        metrics,
 		metricsVitrina: metricsVitrina,
 	}

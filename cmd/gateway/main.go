@@ -18,6 +18,7 @@ import (
 	"github.com/zikwall/app_metrica/internal/metrics"
 	"github.com/zikwall/app_metrica/internal/services/gateway"
 	"github.com/zikwall/app_metrica/internal/services/gateway/eventbus"
+	"github.com/zikwall/app_metrica/internal/services/gateway/handlers/mediavitrina"
 	"github.com/zikwall/app_metrica/internal/services/gateway/handlers/own"
 	"github.com/zikwall/app_metrica/pkg/fiberext"
 	"github.com/zikwall/app_metrica/pkg/log"
@@ -125,12 +126,23 @@ func Main(ctx *cli.Context) error {
 	metroVitrina := metrics.NewVitrina()
 
 	ownBus := eventbus.NewEventBus(
-		cfg,
+		cfg.Internal,
 		metro,
+		cfg.KafkaWriter,
 		"own_metrics",
 		own.HandleBytes,
 		own.HandleMultipleBytes,
 		own.DebugMessage,
+	)
+
+	mediaBus := eventbus.NewEventBus(
+		cfg.Internal,
+		metro,
+		cfg.KafkaWriterMediaVitrina,
+		"media_vitrina",
+		mediavitrina.HandleBytes,
+		mediavitrina.HandleMultipleBytes,
+		mediavitrina.DebugMessage,
 	)
 
 	defer func() {
@@ -139,6 +151,7 @@ func Main(ctx *cli.Context) error {
 		})
 
 		<-ownBus.Done
+		<-mediaBus.Done
 
 		metrica.Stacktrace()
 	}()
@@ -152,6 +165,11 @@ func Main(ctx *cli.Context) error {
 		ownBus.Run(metrica.Context())
 	}()
 
+	// run event bus
+	go func() {
+		mediaBus.Run(metrica.Context())
+	}()
+
 	// run HTTP server for receive events
 	go func() {
 		app := fiber.New(fiber.Config{
@@ -163,7 +181,7 @@ func Main(ctx *cli.Context) error {
 		app.Get("/swagger/*", swagger.HandlerDefault)
 		app.Get("/metrics", prometheus.FastHTTPAdapter())
 
-		handler := gateway.NewHandler(ownBus, metro, metroVitrina)
+		handler := gateway.NewHandler(ownBus, mediaBus, metro, metroVitrina)
 		handler.MountRoutes(app)
 
 		var ln net.Listener

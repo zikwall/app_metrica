@@ -1,4 +1,4 @@
-CREATE DATABASE IF NOT EXISTS appmetrica ON CLUSTER cluster_1;
+CREATE DATABASE IF NOT EXISTS appmetrica ON CLUSTER `ch-cluster1`;
 
 CREATE TABLE IF NOT EXISTS appmetrica.events ON CLUSTER `ch-cluster1`
 (

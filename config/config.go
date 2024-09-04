@@ -20,6 +20,9 @@ type Server struct {
 	KafkaReader *kfk.ReaderOpt `yaml:"kafka_reader"`
 	KafkaWriter *kfk.WriterOpt `yaml:"kafka_writer"`
 
+	KafkaReaderMediaVitrina *kfk.ReaderOpt `yaml:"kafka_reader_media_vitrina"`
+	KafkaWriterMediaVitrina *kfk.WriterOpt `yaml:"kafka_writer_media_vitrina"`
+
 	Prefork bool `yaml:"prefork"`
 }
 
@@ -32,6 +35,7 @@ type Internal struct {
 	CircularBufferSize       int           `yaml:"circular_buffer_size"`
 	ChWriteTimeout           time.Duration `yaml:"ch_write_timeout"`
 	MetricTable              string        `yaml:"metric_table"`
+	MetricMediaVitrinaTable  string        `yaml:"metric_media_vitrina_table"`
 	Debug                    bool          `yaml:"debug"`
 	WithGeo                  bool          `yaml:"with_geo"`
 }

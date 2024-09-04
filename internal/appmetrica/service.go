@@ -12,6 +12,7 @@ import (
 
 	"github.com/zikwall/app_metrica/config"
 	"github.com/zikwall/app_metrica/internal/infrastructure/repositories/clickhouse/event"
+	"github.com/zikwall/app_metrica/internal/infrastructure/repositories/clickhouse/mediavitrina"
 	"github.com/zikwall/app_metrica/pkg/click"
 	"github.com/zikwall/app_metrica/pkg/drop"
 	"github.com/zikwall/app_metrica/pkg/geolocation"
@@ -20,9 +21,13 @@ import (
 )
 
 type Options struct {
-	Click       *click.Opt
-	KafkaReader *kfk.ReaderOpt
-	KafkaWriter *kfk.WriterOpt
+	Click *click.Opt
+
+	KafkaReader             *kfk.ReaderOpt
+	KafkaReaderMediaVitrina *kfk.ReaderOpt
+
+	KafkaWriter             *kfk.WriterOpt
+	KafkaWriterMediaVitrina *kfk.WriterOpt
 
 	MaxMind  config.MaxMind
 	Internal config.Internal
@@ -35,6 +40,7 @@ type AppMetrica struct {
 	ReaderASN     *geolocation.Wrapper
 	Clickhouse    *click.Wrapper
 	Writer        clickhousebuffer.Writer
+	MediaWriter   clickhousebuffer.Writer
 	bufferWrapper *click.BufferWrapper
 	clientWrapper *click.ClientWrapper
 }
@@ -106,6 +112,14 @@ func New(ctx context.Context, opt *Options) (*AppMetrica, error) {
 				"max_execution_time": opt.Internal.ChWriteTimeout.Seconds(),
 			})),
 			cx.NewView(opt.Internal.MetricTable, event.Columns()),
+			cxmem.NewBuffer(client.Options().BatchSize()),
+		)
+
+		metrica.MediaWriter = client.Writer(
+			clickhouse.Context(context.Background(), clickhouse.WithSettings(clickhouse.Settings{
+				"max_execution_time": opt.Internal.ChWriteTimeout.Seconds(),
+			})),
+			cx.NewView(opt.Internal.MetricMediaVitrinaTable, mediavitrina.Columns()),
 			cxmem.NewBuffer(client.Options().BatchSize()),
 		)
 	}
