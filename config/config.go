@@ -60,7 +60,7 @@ type Config struct {
 
 func (c *Config) fillDefaults() {
 	if len(c.KafkaReader.Partitions) == 0 {
-		c.KafkaReader.Partitions = []int{1}
+		c.KafkaReader.Partitions = []int{0}
 	}
 }
 
