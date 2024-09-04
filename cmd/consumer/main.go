@@ -143,7 +143,8 @@ func Main(ctx *cli.Context) error {
 		event.New(metrica.Writer),
 		metrica.ReaderCity.Reader(),
 		metrica.ReaderASN.Reader(),
-		cfg,
+		cfg.Internal,
+		cfg.KafkaReader,
 		metro,
 	)
 	go func() {

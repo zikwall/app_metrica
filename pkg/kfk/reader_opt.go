@@ -55,4 +55,6 @@ type ReaderOpt struct {
 	// ReadLagInterval sets the frequency at which the reader lag is updated.
 	// Setting this field to a negative value disables lag reporting.
 	ReadLagInterval time.Duration
+
+	Partitions []int `yaml:"partitions"`
 }
