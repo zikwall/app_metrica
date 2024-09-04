@@ -6,35 +6,17 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/segmentio/kafka-go"
-
+	"github.com/zikwall/app_metrica/internal/infrastructure/kafka"
 	"github.com/zikwall/app_metrica/pkg/buffer"
 	"github.com/zikwall/app_metrica/pkg/log"
-	"github.com/zikwall/app_metrica/pkg/x"
 	"github.com/zikwall/app_metrica/pkg/xerror"
 )
-
-func (e *EventBus) newKafkaWriter() *kafka.Writer {
-	return &kafka.Writer{
-		Addr:            kafka.TCP(e.opt.KafkaWriter.Brokers...),
-		Topic:           e.opt.KafkaWriter.Topic,
-		Balancer:        &kafka.LeastBytes{},
-		MaxAttempts:     e.opt.KafkaWriter.MaxAttempts,
-		WriteBackoffMin: e.opt.KafkaWriter.WriteBackoffMin,
-		WriteBackoffMax: e.opt.KafkaWriter.WriteBackoffMax,
-		BatchSize:       e.opt.KafkaWriter.BatchSize,
-		BatchBytes:      e.opt.KafkaWriter.BatchBytes,
-		BatchTimeout:    e.opt.KafkaWriter.BatchTimeout,
-		ReadTimeout:     e.opt.KafkaWriter.ReadTimeout,
-		WriteTimeout:    e.opt.KafkaWriter.WriteTimeout,
-	}
-}
 
 func (e *EventBus) listen(ctx context.Context, number int) {
 	log.Infof("run producer proc with circular buffer(64): %d", number)
 	defer log.Infof("stop producer proc with circular buffer(64): %d", number)
 
-	writer := e.newKafkaWriter()
+	writer := kafka.New(e.writerOpt)
 
 	defer func() {
 		if err := writer.Close(); err != nil {
@@ -42,7 +24,7 @@ func (e *EventBus) listen(ctx context.Context, number int) {
 		}
 	}()
 
-	circular := buffer.NewCircularBuffer(e.opt.Internal.CircularBufferSize)
+	circular := buffer.NewCircularBuffer(e.opt.CircularBufferSize)
 
 	// flushBuffer is a closure that is responsible for sending the filled circular buffer data to Kafka.
 	flushBuffer := func() error {
@@ -55,7 +37,7 @@ func (e *EventBus) listen(ctx context.Context, number int) {
 			e.metrics.IncQueue(len(m), false, err)
 		}()
 
-		if e.opt.Internal.Debug {
+		if e.opt.Debug {
 			log.Infof("buffer #%d is not empty, flush..", number)
 		}
 
@@ -66,7 +48,7 @@ func (e *EventBus) listen(ctx context.Context, number int) {
 			return fmt.Errorf("dequeue batch from buffer: %w", err)
 		}
 
-		err = writer.WriteMessages(ctx, assembleMessages(m)...)
+		err = writer.WriteBytesMessages(ctx, m)
 		if err != nil {
 			return fmt.Errorf("handle write to kafka: %w", err)
 		}
@@ -86,7 +68,7 @@ func (e *EventBus) listen(ctx context.Context, number int) {
 				e.metrics.IncQueue(len(m), true, err)
 			}()
 
-			if e.opt.Internal.Debug {
+			if e.opt.Debug {
 				log.Infof("buffer #%d is not empty, flush by ticker..", number)
 			}
 
@@ -95,8 +77,7 @@ func (e *EventBus) listen(ctx context.Context, number int) {
 				return fmt.Errorf("ticker handle dequeue batch: %w", err)
 			}
 
-			err = writer.WriteMessages(ctx, assembleMessages(m)...)
-
+			err = writer.WriteBytesMessages(ctx, m)
 			if err != nil {
 				return fmt.Errorf("ticker handle write to kafka: %w", err)
 			}
@@ -206,10 +187,4 @@ func (e *EventBus) handleErrorMetric(err error) {
 		return
 	}
 	e.metrics.IncGatewayError(err)
-}
-
-func assembleMessages(m [][]byte) []kafka.Message {
-	return x.Map[[]byte, kafka.Message](m, func(i []byte, _ int) kafka.Message {
-		return kafka.Message{Value: i}
-	})
 }

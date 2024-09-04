@@ -12,8 +12,11 @@ import (
 	"github.com/zikwall/app_metrica/config"
 	"github.com/zikwall/app_metrica/internal/appmetrica"
 	"github.com/zikwall/app_metrica/internal/infrastructure/repositories/clickhouse/event"
+	"github.com/zikwall/app_metrica/internal/infrastructure/repositories/clickhouse/mediavitrina"
 	"github.com/zikwall/app_metrica/internal/metrics"
-	"github.com/zikwall/app_metrica/internal/services/consumer"
+	"github.com/zikwall/app_metrica/internal/services/consumer/eventbus"
+	mediavitrinaHandler "github.com/zikwall/app_metrica/internal/services/consumer/handlers/mediavitrina"
+	"github.com/zikwall/app_metrica/internal/services/consumer/handlers/own"
 	"github.com/zikwall/app_metrica/pkg/fiberext"
 	"github.com/zikwall/app_metrica/pkg/log"
 	"github.com/zikwall/app_metrica/pkg/prometheus"
@@ -78,10 +81,11 @@ func Main(ctx *cli.Context) error {
 	}
 
 	metrica, err := appmetrica.New(appContext, &appmetrica.Options{
-		Click:       cfg.Clickhouse,
-		KafkaReader: cfg.KafkaReader,
-		MaxMind:     cfg.MaxMind,
-		Internal:    cfg.Internal,
+		Click:                   cfg.Clickhouse,
+		KafkaReader:             cfg.KafkaReader,
+		KafkaReaderMediaVitrina: cfg.KafkaReaderMediaVitrina,
+		MaxMind:                 cfg.MaxMind,
+		Internal:                cfg.Internal,
 	})
 	if err != nil {
 		return err
@@ -138,17 +142,31 @@ func Main(ctx *cli.Context) error {
 	}()
 
 	metro := metrics.New()
+	metroVitrina := metrics.NewVitrina()
 
-	consul := consumer.New(
-		event.New(metrica.Writer),
-		metrica.ReaderCity.Reader(),
-		metrica.ReaderASN.Reader(),
-		cfg.Internal,
-		cfg.KafkaReader,
-		metro,
-	)
 	go func() {
-		consul.Run(metrica.Context())
+		eventbus.New(
+			cfg.Internal,
+			cfg.KafkaReader,
+			own.New(
+				metrica.ReaderCity.Reader(),
+				metrica.ReaderASN.Reader(),
+				event.New(metrica.Writer),
+				metro,
+				cfg.WithGeo,
+			),
+		).Run(metrica.Context())
+	}()
+
+	go func() {
+		eventbus.New(
+			cfg.Internal,
+			cfg.KafkaReaderMediaVitrina,
+			mediavitrinaHandler.New(
+				mediavitrina.New(metrica.MediaWriter),
+				metroVitrina,
+			),
+		).Run(metrica.Context())
 	}()
 
 	log.Info("AppMetrica: statistic and analytic system")

@@ -6,6 +6,7 @@ server:
     city_path: "./share/GeoIP2-City.mmdb"
     asn_path: "./share/GeoLite2-ASN.mmdb"
   prefork: false
+
   internal:
     handler_proc_size: 16
     consumer_per_instance_size: 2
@@ -16,7 +17,9 @@ server:
     circular_buffer_size: 64
     ch_write_timeout: 0m15s
     metric_table: appmetrica.events
+    metric_media_vitrina_table: appmetrica.mediavitrina
     with_geo: true
+
   clickhouse:
     hosts:
       - localhost:9001
@@ -27,6 +30,7 @@ server:
     max_open_conns: 20
     max_idle_conns: 15
     max_conn_max_lifetime: 10m0s
+
   kafka_reader:
     brokers: [":9993", ":9994", ":9995"]
     group_id: "appmetrica_main_readers"
@@ -39,9 +43,42 @@ server:
     maxwait: 0s
     readbatchtimeout: 0s
     readlaginterval: 0s
+    partitions:
+      - 0
+      - 1
+
   kafka_writer:
     brokers: [":9993", ":9994", ":9995"]
     topic: "appmetrica_main_bus"
+    maxattempts: 0
+    writebackoffmin: 0s
+    writebackoffmax: 0s
+    batchsize: 0
+    batchbytes: 0
+    batchtimeout: 0s
+    readtimeout: 0s
+    writetimeout: 0s
+    async: false
+
+  kafka_reader_media_vitrina:
+    brokers: [ ":9993", ":9994", ":9995" ]
+    group_id: "appmetrica_main_readers"
+    group_topics: [ ]
+    topic: "appmetrica_main_bus_media"
+    partition: 0
+    queuecapacity: 0
+    minbytes: 0
+    maxbytes: 010e6 #10MB
+    maxwait: 0s
+    readbatchtimeout: 0s
+    readlaginterval: 0s
+    partitions:
+      - 0
+      - 1
+
+  kafka_writer_media_vitrina:
+    brokers: [ ":9993", ":9994", ":9995" ]
+    topic: "appmetrica_main_bus_media"
     maxattempts: 0
     writebackoffmin: 0s
     writebackoffmax: 0s

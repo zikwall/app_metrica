@@ -7,6 +7,7 @@ import (
 
 	"github.com/zikwall/app_metrica/config"
 	"github.com/zikwall/app_metrica/internal/metrics"
+	"github.com/zikwall/app_metrica/pkg/kfk"
 )
 
 type Metrics interface {
@@ -23,9 +24,10 @@ type BytesHandler func(event Event) ([][]byte, error)
 type DebugHandler func(ev Event) error
 
 type EventBus struct {
-	wg      *sync.WaitGroup
-	opt     *config.Config
-	metrics Metrics
+	wg        *sync.WaitGroup
+	opt       config.Internal
+	writerOpt *kfk.WriterOpt
+	metrics   Metrics
 
 	events chan Event
 
@@ -38,8 +40,9 @@ type EventBus struct {
 }
 
 func NewEventBus(
-	opt *config.Config,
+	opt config.Internal,
 	metrics *metrics.Metrics,
+	writerOpt *kfk.WriterOpt,
 	name string,
 	byteHandler ByteHandler,
 	bytesHandler BytesHandler,
@@ -49,7 +52,8 @@ func NewEventBus(
 		wg:              &sync.WaitGroup{},
 		opt:             opt,
 		metrics:         metrics,
-		events:          make(chan Event, opt.Internal.ProducerPerInstanceSize+10000),
+		writerOpt:       writerOpt,
+		events:          make(chan Event, opt.ProducerPerInstanceSize+10000),
 		name:            name,
 		byteHandler:     byteHandler,
 		bytesHandler:    bytesHandler,
@@ -68,7 +72,7 @@ func (e *EventBus) DebugMessage(event Event) error {
 }
 
 func (e *EventBus) Run(ctx context.Context) {
-	for i := 1; i <= e.opt.Internal.ProducerPerInstanceSize; i++ {
+	for i := 1; i <= e.opt.ProducerPerInstanceSize; i++ {
 		e.wg.Add(1)
 		go func(number int) {
 			defer e.wg.Done()
