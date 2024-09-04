@@ -44,7 +44,7 @@ type Consumer struct {
 
 func (c *Consumer) Run(ctx context.Context) {
 	usePartition := false
-	if len(c.readerOpt.Partitions) > 1 {
+	if len(c.readerOpt.Partitions) > 0 {
 		usePartition = true
 	}
 
