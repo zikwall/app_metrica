@@ -65,7 +65,7 @@ type DebugMessage struct {
 // @Description	Method check event message is valid or not
 // @Tags			Events
 // @Accept			json
-// @Param			data	body	domain.Event	true	"request debug event"
+// @Param			data	body	event.Event	true	"request debug event"
 // @Produce		json
 // @Success		202	{object}	DebugMessage	"ok"
 // @Failure		422	{object}	ErrorMessage
@@ -159,12 +159,12 @@ func (h *Handler) eventBatch(ctx *fiber.Ctx) error {
 
 // @Summary		Receive eventMedia fields
 // @Description	Method receive messages and send to queue
-// @Tags		Events
-// @Accept		json
-// @Param		data	body	mediavitrina.MediaVitrina	true	"request events"
+// @Tags			Events
+// @Accept			json
+// @Param			data	body	mediavitrina.MediaVitrina	true	"request events"
 // @Produce		json
 // @Success		201	{object}	string	"no content"
-// @Router		/internal/api/v1/event/mediavitrina [post]
+// @Router			/internal/api/v1/event/mediavitrina [get]
 func (h *Handler) eventMedia(ctx *fiber.Ctx) error {
 	mv := mediavitrina.QueryParametersToEntity(ctx.Queries())
 

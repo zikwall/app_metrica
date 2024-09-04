@@ -43,7 +43,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.Event"
+                            "$ref": "#/definitions/event.Event"
                         }
                     }
                 ],
@@ -79,7 +79,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/domain.Event"
+                                "$ref": "#/definitions/event.Event"
                             }
                         }
                     }
@@ -114,7 +114,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.Event"
+                            "$ref": "#/definitions/event.Event"
                         }
                     }
                 ],
@@ -133,10 +133,44 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/internal/api/v1/event/mediavitrina": {
+            "get": {
+                "description": "Method receive messages and send to queue",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Receive eventMedia fields",
+                "parameters": [
+                    {
+                        "description": "request events",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/mediavitrina.MediaVitrina"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "no content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "domain.Event": {
+        "event.Event": {
             "type": "object",
             "properties": {
                 "android_id": {
@@ -185,7 +219,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "event_datetime": {
-                    "$ref": "#/definitions/domain.EventDatetime"
+                    "$ref": "#/definitions/event.EventDatetime"
                 },
                 "event_json": {
                     "type": "string"
@@ -300,7 +334,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.EventDatetime": {
+        "event.EventDatetime": {
             "type": "object",
             "properties": {
                 "time.Time": {
@@ -320,10 +354,13 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "xforwardedFor": {
+                "real_ip": {
                     "type": "string"
                 },
-                "xrealIP": {
+                "x_forwarded_for": {
+                    "type": "string"
+                },
+                "x_real_ip": {
                     "type": "string"
                 }
             }
@@ -335,6 +372,146 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "request_body": {
+                    "type": "string"
+                }
+            }
+        },
+        "mediavitrina.MediaVitrina": {
+            "type": "object",
+            "properties": {
+                "ad_position": {
+                    "type": "string"
+                },
+                "application_id": {
+                    "type": "string"
+                },
+                "bitrate": {
+                    "type": "integer"
+                },
+                "buffering_count": {
+                    "type": "integer"
+                },
+                "buffering_sec": {
+                    "type": "integer"
+                },
+                "client_ad_sec": {
+                    "type": "integer"
+                },
+                "client_time_zone_offset": {
+                    "type": "integer"
+                },
+                "content_sec": {
+                    "type": "integer"
+                },
+                "device_model": {
+                    "type": "string"
+                },
+                "device_type": {
+                    "type": "string"
+                },
+                "device_vendor": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "drm": {
+                    "type": "integer"
+                },
+                "drm_system_name": {
+                    "type": "string"
+                },
+                "error_adv": {
+                    "type": "string"
+                },
+                "error_title": {
+                    "type": "string"
+                },
+                "event_datetime": {
+                    "$ref": "#/definitions/event.EventDatetime"
+                },
+                "event_name": {
+                    "type": "string"
+                },
+                "event_timestamp": {
+                    "type": "integer"
+                },
+                "event_ts": {
+                    "type": "string"
+                },
+                "init_before_stream_or_ad_request_msec": {
+                    "type": "integer"
+                },
+                "is_fullscreen_mode": {
+                    "type": "integer"
+                },
+                "is_muted": {
+                    "type": "integer"
+                },
+                "is_nobanner": {
+                    "type": "integer"
+                },
+                "is_subtitles_mode": {
+                    "type": "integer"
+                },
+                "is_web_player": {
+                    "type": "integer"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "mode": {
+                    "type": "string"
+                },
+                "pause_sec": {
+                    "type": "integer"
+                },
+                "player": {
+                    "type": "string"
+                },
+                "player_id": {
+                    "type": "string"
+                },
+                "product": {
+                    "type": "string"
+                },
+                "sid": {
+                    "type": "string"
+                },
+                "stream_or_ad_initial_buffering_msec": {
+                    "type": "integer"
+                },
+                "stream_ts": {
+                    "type": "integer"
+                },
+                "uid": {
+                    "type": "string"
+                },
+                "user_browser": {
+                    "type": "string"
+                },
+                "user_browser_ver": {
+                    "type": "string"
+                },
+                "user_browser_ver_major": {
+                    "type": "string"
+                },
+                "user_browser_ver_minor": {
+                    "type": "string"
+                },
+                "user_os_name": {
+                    "type": "string"
+                },
+                "user_os_ver_major": {
+                    "type": "string"
+                },
+                "user_os_ver_minor": {
+                    "type": "string"
+                },
+                "user_region_iso_3166_2": {
+                    "type": "string"
+                },
+                "vitrina_id": {
                     "type": "string"
                 }
             }

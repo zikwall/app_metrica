@@ -1,6 +1,6 @@
 basePath: /
 definitions:
-  domain.Event:
+  event.Event:
     properties:
       android_id:
         type: string
@@ -33,7 +33,7 @@ definitions:
       device_type:
         type: string
       event_datetime:
-        $ref: '#/definitions/domain.EventDatetime'
+        $ref: '#/definitions/event.EventDatetime'
       event_json:
         type: string
       event_name:
@@ -109,7 +109,7 @@ definitions:
       xlhd_agent:
         type: string
     type: object
-  domain.EventDatetime:
+  event.EventDatetime:
     properties:
       time.Time:
         type: string
@@ -122,9 +122,11 @@ definitions:
         items:
           type: string
         type: array
-      xforwardedFor:
+      real_ip:
         type: string
-      xrealIP:
+      x_forwarded_for:
+        type: string
+      x_real_ip:
         type: string
     type: object
   gateway.ErrorMessage:
@@ -132,6 +134,99 @@ definitions:
       error:
         type: string
       request_body:
+        type: string
+    type: object
+  mediavitrina.MediaVitrina:
+    properties:
+      ad_position:
+        type: string
+      application_id:
+        type: string
+      bitrate:
+        type: integer
+      buffering_count:
+        type: integer
+      buffering_sec:
+        type: integer
+      client_ad_sec:
+        type: integer
+      client_time_zone_offset:
+        type: integer
+      content_sec:
+        type: integer
+      device_model:
+        type: string
+      device_type:
+        type: string
+      device_vendor:
+        type: string
+      domain:
+        type: string
+      drm:
+        type: integer
+      drm_system_name:
+        type: string
+      error_adv:
+        type: string
+      error_title:
+        type: string
+      event_datetime:
+        $ref: '#/definitions/event.EventDatetime'
+      event_name:
+        type: string
+      event_timestamp:
+        type: integer
+      event_ts:
+        type: string
+      init_before_stream_or_ad_request_msec:
+        type: integer
+      is_fullscreen_mode:
+        type: integer
+      is_muted:
+        type: integer
+      is_nobanner:
+        type: integer
+      is_subtitles_mode:
+        type: integer
+      is_web_player:
+        type: integer
+      location:
+        type: string
+      mode:
+        type: string
+      pause_sec:
+        type: integer
+      player:
+        type: string
+      player_id:
+        type: string
+      product:
+        type: string
+      sid:
+        type: string
+      stream_or_ad_initial_buffering_msec:
+        type: integer
+      stream_ts:
+        type: integer
+      uid:
+        type: string
+      user_browser:
+        type: string
+      user_browser_ver:
+        type: string
+      user_browser_ver_major:
+        type: string
+      user_browser_ver_minor:
+        type: string
+      user_os_name:
+        type: string
+      user_os_ver_major:
+        type: string
+      user_os_ver_minor:
+        type: string
+      user_region_iso_3166_2:
+        type: string
+      vitrina_id:
         type: string
     type: object
 host: lm.limehd.tv
@@ -158,7 +253,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/domain.Event'
+          $ref: '#/definitions/event.Event'
       produces:
       - application/json
       responses:
@@ -181,7 +276,7 @@ paths:
         required: true
         schema:
           items:
-            $ref: '#/definitions/domain.Event'
+            $ref: '#/definitions/event.Event'
           type: array
       produces:
       - application/json
@@ -204,7 +299,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/domain.Event'
+          $ref: '#/definitions/event.Event'
       produces:
       - application/json
       responses:
@@ -217,6 +312,28 @@ paths:
           schema:
             $ref: '#/definitions/gateway.ErrorMessage'
       summary: Debug event fields
+      tags:
+      - Events
+  /internal/api/v1/event/mediavitrina:
+    get:
+      consumes:
+      - application/json
+      description: Method receive messages and send to queue
+      parameters:
+      - description: request events
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/mediavitrina.MediaVitrina'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: no content
+          schema:
+            type: string
+      summary: Receive eventMedia fields
       tags:
       - Events
 swagger: "2.0"
