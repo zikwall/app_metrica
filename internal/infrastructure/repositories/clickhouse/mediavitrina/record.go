@@ -1,6 +1,7 @@
 package mediavitrina
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/zikwall/clickhouse-buffer/v4/src/cx"
@@ -108,6 +109,8 @@ func (r *Record) Row() cx.Vector {
 
 func recordFromEvent(e *mediavitrina.MediaVitrina) *Record {
 	eventDatetime := time.Now()
+
+	fmt.Println(eventDatetime)
 
 	return &Record{
 		EventName:                       e.EventName,
