@@ -1,8 +1,9 @@
 package mediavitrina
 
 import (
-	"github.com/zikwall/clickhouse-buffer/v4/src/cx"
 	"time"
+
+	"github.com/zikwall/clickhouse-buffer/v4/src/cx"
 
 	"github.com/zikwall/app_metrica/pkg/domain/mediavitrina"
 )
@@ -106,10 +107,7 @@ func (r *Record) Row() cx.Vector {
 }
 
 func recordFromEvent(e *mediavitrina.MediaVitrina) *Record {
-	eventDatetime := e.EventDatetime.Time
-	if eventDatetime.IsZero() {
-		eventDatetime = time.Now()
-	}
+	eventDatetime := time.Now()
 
 	return &Record{
 		EventName:                       e.EventName,
