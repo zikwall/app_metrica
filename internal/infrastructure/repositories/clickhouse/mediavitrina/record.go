@@ -106,6 +106,11 @@ func (r *Record) Row() cx.Vector {
 }
 
 func recordFromEvent(e *mediavitrina.MediaVitrina) *Record {
+	eventDatetime := e.EventDatetime.Time
+	if eventDatetime.IsZero() {
+		eventDatetime = time.Now()
+	}
+
 	return &Record{
 		EventName:                       e.EventName,
 		PlayerID:                        e.PlayerID,
@@ -150,8 +155,8 @@ func recordFromEvent(e *mediavitrina.MediaVitrina) *Record {
 		Product:                         e.Product,
 		IsWebPlayer:                     e.IsWebPlayer,
 		IsNobanner:                      e.IsNobanner,
-		EventDatetime:                   e.EventDatetime.Time,
-		EventTimestamp:                  e.EventTimestamp,
+		EventDatetime:                   eventDatetime,
+		EventTimestamp:                  eventDatetime.Unix(),
 	}
 }
 
